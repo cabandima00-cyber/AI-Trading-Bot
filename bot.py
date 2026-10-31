@@ -249,6 +249,49 @@ def analyze(symbol, interval="1h"):
     return result
 
 
+@bot.message_handler(commands=["otc"])
+def otc_markets(message):
+    api_key = os.getenv("OTC_API_KEY")
+
+    if not api_key:
+        bot.reply_to(message, "❌ OTC API-ключ не найден.")
+        return
+
+    try:
+        response = requests.get(
+            "https://otcharts.com/v1/symbols",
+            headers={
+                "Authorization": f"Bearer {api_key}"
+            },
+            params={"venue": "binodex"},
+            timeout=20
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        symbols = data.get("symbols", [])
+
+        if not symbols:
+            bot.reply_to(message, "❌ OTC-пары не найдены.")
+            return
+
+        text = "📊 BINODEX OTC ПАРЫ\n\n"
+
+        for item in symbols:
+            if isinstance(item, dict):
+                name = item.get("symbol", "Неизвестно")
+                text += f"• {name}\n"
+            else:
+                text += f"• {item}\n"
+
+        bot.reply_to(message, text[:4000])
+
+    except Exception as error:
+        bot.reply_to(
+            message,
+            f"❌ Ошибка получения OTC-пар: {type(error).__name__}"
+        )
 @bot.message_handler(commands=["start"])
 def start(message):
     active_chats.add(message.chat.id)
