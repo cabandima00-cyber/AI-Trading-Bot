@@ -66,21 +66,37 @@ def get_forex_data(symbol, interval="1h"):
     return df
 
 
-def get_crypto_data(symbol, interval="1h"):
+def get_binodex_data(symbol, interval="1h"):
+    api_key = os.getenv("OTC_API_KEY")
+
+    if not api_key:
+        raise ValueError("Не найден OTC_API_KEY в GitHub Secrets")
+
+    timeframe_map = {
+        "1min": 60,
+        "5min": 300,
+        "15min": 900,
+        "30min": 1800,
+        "1h": 3600,
+        "4h": 14400,
+        "1day": 86400
+    }
+
+    tf = timeframe_map.get(interval)
+
+    if tf is None:
+        raise ValueError("Этот таймфрейм не поддерживается BinoDex OTC")
+
     response = requests.get(
-        BINANCE_API,
+        "https://otcharts.com/v1/candles",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "AI-Market-Signal-Bot/1.0"
+        },
         params={
+            "venue": "binodex",
             "symbol": symbol,
-           "interval": {
-    "1min": "1m",
-    "5min": "5m",
-    "15min": "15m",
-    "30min": "30m",
-    "1h": "1h",
-    "4h": "4h",
-    "1day": "1d",
-    "1week": "1w"
-}.get(interval, interval),
+            "tf": tf,
             "limit": 200
         },
         timeout=20
@@ -89,31 +105,56 @@ def get_crypto_data(symbol, interval="1h"):
     response.raise_for_status()
     data = response.json()
 
-    if not isinstance(data, list) or len(data) < 60:
-        raise ValueError("Недостаточно данных криптовалюты")
+    candles = data.get("candles", [])
 
-    df = pd.DataFrame(data, columns=[
-        "time", "open", "high", "low", "close",
-        "volume", "close_time", "quote_volume",
-        "trades", "taker_buy", "taker_quote", "ignore"
-    ])
+    if len(candles) < 60:
+        raise ValueError("Недостаточно OTC-свечей для анализа")
+
+    df = pd.DataFrame(candles)
 
     for col in ["open", "high", "low", "close"]:
-        df[col] = pd.to_numeric(df[col])
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    if "volume" in df.columns:
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
+
+    df["time"] = pd.to_datetime(
+        df["time"],
+        unit="s",
+        utc=True
+    )
+
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    df = df.reset_index(drop=True)
+
+    if len(df) < 60:
+        raise ValueError("Недостаточно корректных OTC-свечей")
 
     return df
 def analyze(symbol, interval="1h"):
-    symbol = symbol.upper().replace("/", "")
+    is_otc = symbol.upper().startswith("OTC:")
 
-    if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
-        return "❌ Неверный формат пары."
+    if is_otc:
+        symbol = symbol[4:].strip().upper()
 
-    if symbol in FOREX_PAIRS:
-        df = get_forex_data(symbol, interval)
-        market = "FOREX"
+        if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
+            return "❌ Неверный формат OTC-пары."
+
+        df = get_binodex_data(symbol, interval)
+        market = "BINODEX OTC"
+
     else:
-        df = get_crypto_data(symbol, interval)
-        market = "CRYPTO"
+        symbol = symbol.upper().replace("/", "")
+
+        if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
+            return "❌ Неверный формат пары."
+
+        if symbol in FOREX_PAIRS:
+            df = get_forex_data(symbol, interval)
+            market = "FOREX"
+        else:
+            df = get_crypto_data(symbol, interval)
+            market = "CRYPTO"
 
     close = df["close"]
 
