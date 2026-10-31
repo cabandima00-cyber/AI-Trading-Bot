@@ -148,29 +148,24 @@ def analyze(symbol, interval="1h"):
     if pd.isna(atr) or pd.isna(rsi):
         raise ValueError("Недостаточно индикаторных данных")
 
-    score = 0
+       buy_conditions = (
+        price > row["ema20"] > row["ema50"]
+        and 50 < rsi < 68
+        and row["macd"] > row["macd_signal"]
+    )
 
-    if price > row["ema20"] > row["ema50"]:
-        score += 1
-    elif price < row["ema20"] < row["ema50"]:
-        score -= 1
+    sell_conditions = (
+        price < row["ema20"] < row["ema50"]
+        and 32 < rsi < 50
+        and row["macd"] < row["macd_signal"]
+    )
 
-    if 50 < rsi < 70:
-        score += 1
-    elif 30 < rsi < 50:
-        score -= 1
-
-    if row["macd"] > row["macd_signal"]:
-        score += 1
-    elif row["macd"] < row["macd_signal"]:
-        score -= 1
-
-    if score >= 2:
+    if buy_conditions:
         signal = "🟢 BUY"
         stop = price - atr * 1.5
         target = price + atr * 3
 
-    elif score <= -2:
+    elif sell_conditions:
         signal = "🔴 SELL"
         stop = price + atr * 1.5
         target = price - atr * 3
