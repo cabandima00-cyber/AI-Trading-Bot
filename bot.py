@@ -105,8 +105,6 @@ def get_crypto_data(symbol, interval="1h"):
 def analyze(symbol, interval="1h"):
     symbol = symbol.upper().replace("/", "")
 
-    symbol = symbol.upper().replace("/", "")
-
     if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
         return "❌ Неверный формат пары."
 
@@ -138,7 +136,6 @@ def analyze(symbol, interval="1h"):
 
     df["atr"] = tr.rolling(14).mean()
 
-    # Последняя полностью закрытая свеча
     row = df.iloc[-2]
 
     price = row["close"]
@@ -148,7 +145,7 @@ def analyze(symbol, interval="1h"):
     if pd.isna(atr) or pd.isna(rsi):
         raise ValueError("Недостаточно индикаторных данных")
 
-       buy_conditions = (
+    buy_conditions = (
         price > row["ema20"] > row["ema50"]
         and 50 < rsi < 68
         and row["macd"] > row["macd_signal"]
