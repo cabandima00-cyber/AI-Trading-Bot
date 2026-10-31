@@ -170,13 +170,13 @@ def signal_command(message):
         result = analyze(symbol)
         bot.send_message(message.chat.id, result)
 
-    except Exception as error:
-        print("Analysis error:", error)
-        bot.send_message(
-            message.chat.id,
-            "❌ Не удалось выполнить анализ. "
-            "Проверь торговую пару или попробуй позже."
-        )
+  except Exception as error:
+    print("Analysis error:", repr(error))
+
+    bot.send_message(
+        message.chat.id,
+        f"❌ Ошибка анализа:\n{type(error).__name__}\n{str(error)[:800]}"
+    )
 
 
 print("AI Market Signal Bot started!")
