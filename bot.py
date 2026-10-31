@@ -1,3 +1,4 @@
+import threading
 import os
 import re
 import requests
@@ -196,6 +197,8 @@ def analyze(symbol):
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    active_chats.add(message.chat.id)
+
     bot.reply_to(
         message,
         "🤖 AI MARKET SIGNAL BOT\n\n"
@@ -209,6 +212,42 @@ def start(message):
     )
 
 
+active_chats = set()
+last_signals = {}
+
+CRYPTO_PAIRS = [
+    "BTCUSDT", "ETHUSDT", "BNBUSDT",
+    "SOLUSDT", "XRPUSDT"
+]
+
+ALL_PAIRS = CRYPTO_PAIRS + sorted(FOREX_PAIRS)
+
+
+def automatic_scanner():
+    while True:
+        for symbol in ALL_PAIRS:
+            try:
+                result = analyze(symbol)
+
+                if "Сигнал: 🟢 BUY" in result:
+                    current_signal = "BUY"
+                elif "Сигнал: 🔴 SELL" in result:
+                    current_signal = "SELL"
+                else:
+                    continue
+
+                if last_signals.get(symbol) == current_signal:
+                    continue
+
+                for chat_id in list(active_chats):
+                    bot.send_message(chat_id, result)
+
+                last_signals[symbol] = current_signal
+
+            except Exception as error:
+                print(f"Scanner error {symbol}: {error}")
+
+        time.sleep(1800)
 @bot.message_handler(commands=["help"])
 def help_command(message):
     bot.reply_to(
@@ -259,5 +298,10 @@ def signal_command(message):
 
 
 print("AI Market Signal Bot started!")
+
+threading.Thread(
+    target=automatic_scanner,
+    daemon=True
+).start()
 
 bot.infinity_polling(skip_pending=True)
