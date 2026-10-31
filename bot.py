@@ -71,7 +71,16 @@ def get_crypto_data(symbol, interval="1h"):
         BINANCE_API,
         params={
             "symbol": symbol,
-            "interval": interval,
+           "interval": {
+    "1min": "1m",
+    "5min": "5m",
+    "15min": "15m",
+    "30min": "30m",
+    "1h": "1h",
+    "4h": "4h",
+    "1day": "1d",
+    "1week": "1w"
+}.get(interval, interval),
             "limit": 200
         },
         timeout=20
@@ -227,7 +236,7 @@ def automatic_scanner():
     while True:
         for symbol in ALL_PAIRS:
             try:
-                result = analyze(symbol)
+                result = analyze(symbol, "1h")
 
                 if "Сигнал: 🟢 BUY" in result:
                     current_signal = "BUY"
