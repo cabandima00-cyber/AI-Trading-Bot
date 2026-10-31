@@ -1,5 +1,7 @@
 name: AI Market Signal Bot
-
+concurrency:
+  group: ai-market-signal-bot
+  cancel-in-progress: true
 on:
   workflow_dispatch:
   push:
