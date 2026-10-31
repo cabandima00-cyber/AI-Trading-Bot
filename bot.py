@@ -320,3 +320,11 @@ def signal_command(message):
             f"{type(error).__name__}\n"
             f"{str(error)[:800]}"
         )
+print("AI Market Signal Bot started!")
+
+threading.Thread(
+    target=automatic_scanner,
+    daemon=True
+).start()
+
+bot.infinity_polling(skip_pending=True)
