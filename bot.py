@@ -14,7 +14,7 @@ if not TOKEN:
 
 bot = telebot.TeleBot(TOKEN)
 
-BINANCE_API = "https://api.binance.com/api/v3/klines"
+BINANCE_API = "https://data-api.binance.vision/api/v3/klines"
 
 def analyze(symbol):
     symbol = symbol.upper()
