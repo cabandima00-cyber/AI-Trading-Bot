@@ -26,7 +26,7 @@ FOREX_PAIRS = {
 }
 
 
-def get_forex_data(symbol):
+def get_forex_data(symbol, interval="1h"):
     if not TWELVE_API_KEY:
         raise ValueError("Не найден TWELVE_DATA_API_KEY в GitHub Secrets")
 
@@ -36,7 +36,7 @@ def get_forex_data(symbol):
         TWELVE_API,
         params={
             "symbol": forex_symbol,
-            "interval": "1h",
+           "interval": interval,
             "outputsize": 200,
             "apikey": TWELVE_API_KEY
         },
@@ -66,12 +66,12 @@ def get_forex_data(symbol):
     return df
 
 
-def get_crypto_data(symbol):
+def get_crypto_data(symbol, interval="1h"):
     response = requests.get(
         BINANCE_API,
         params={
             "symbol": symbol,
-            "interval": "1h",
+            "interval": interval,
             "limit": 200
         },
         timeout=20
@@ -95,7 +95,7 @@ def get_crypto_data(symbol):
     return df
 
 
-def analyze(symbol):
+def analyze(symbol, interval="1h"):
     symbol = symbol.upper().replace("/", "")
 
     if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
