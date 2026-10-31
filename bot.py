@@ -102,8 +102,8 @@ def get_crypto_data(symbol, interval="1h"):
         df[col] = pd.to_numeric(df[col])
 
     return df
-
-
+def analyze(symbol, interval="1h"):
+    symbol = symbol.upper().replace("/", "")
 
     symbol = symbol.upper().replace("/", "")
 
@@ -184,7 +184,7 @@ def get_crypto_data(symbol, interval="1h"):
         f"🤖 AI MARKET ANALYSIS\n\n"
         f"📊 Рынок: {market}\n"
         f"💹 Пара: {symbol}\n"
-        f"⏱ Таймфрейм: 1 час\n"
+       f"⏱ Таймфрейм: {interval}\n"
         f"💰 Цена: {price:.8g}\n\n"
         f"📊 Сигнал: {signal}\n"
         f"📈 RSI: {rsi:.2f}\n"
