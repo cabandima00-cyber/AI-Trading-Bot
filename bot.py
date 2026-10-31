@@ -120,7 +120,7 @@ def analyze(symbol, interval="1h"):
     df["ema20"] = close.ewm(span=20, adjust=False).mean()
     df["ema50"] = close.ewm(span=50, adjust=False).mean()
 
-       df["rsi"] = RSIIndicator(close, window=14).rsi()
+    df["rsi"] = RSIIndicator(close, window=14).rsi()
 
     macd = MACD(close)
     df["macd"] = macd.macd()
@@ -187,10 +187,11 @@ def analyze(symbol, interval="1h"):
         f"🤖 AI MARKET ANALYSIS\n\n"
         f"📊 Рынок: {market}\n"
         f"💹 Пара: {symbol}\n"
-       f"⏱ Таймфрейм: {interval}\n"
+        f"⏱ Таймфрейм: {interval}\n"
         f"💰 Цена: {price:.8g}\n\n"
         f"📊 Сигнал: {signal}\n"
         f"📈 RSI: {rsi:.2f}\n"
+        f"📊 ADX: {adx:.2f}\n"
         f"EMA 20: {row['ema20']:.8g}\n"
         f"EMA 50: {row['ema50']:.8g}\n"
         f"MACD: {row['macd']:.8g}\n\n"
