@@ -122,17 +122,17 @@ def analyze(symbol, interval="1h"):
 
     df["rsi"] = RSIIndicator(close, window=14).rsi()
 
-    macd = MACD(close)
+       macd = MACD(close)
     df["macd"] = macd.macd()
     df["macd_signal"] = macd.macd_signal()
-        adx_indicator = ADXIndicator(
+
+    adx_indicator = ADXIndicator(
         high=df["high"],
         low=df["low"],
         close=close,
         window=14
     )
     df["adx"] = adx_indicator.adx()
-
     previous_close = close.shift(1)
 
     tr = pd.concat([
