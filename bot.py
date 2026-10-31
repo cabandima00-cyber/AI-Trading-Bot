@@ -1,13 +1,14 @@
 import os
 import re
-import time
 import requests
 import telebot
 import pandas as pd
+
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
 
 TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+TWELVE_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
 if not TOKEN:
     raise ValueError("Не найден BOT_TOKEN")
@@ -15,13 +16,56 @@ if not TOKEN:
 bot = telebot.TeleBot(TOKEN)
 
 BINANCE_API = "https://data-api.binance.vision/api/v3/klines"
+TWELVE_API = "https://api.twelvedata.com/time_series"
 
-def analyze(symbol):
-    symbol = symbol.upper()
+FOREX_PAIRS = {
+    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD",
+    "USDCAD", "USDCHF", "NZDUSD", "EURJPY",
+    "GBPJPY", "EURGBP"
+}
 
-    if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
-        return "❌ Неверный формат торговой пары."
 
+def get_forex_data(symbol):
+    if not TWELVE_API_KEY:
+        raise ValueError("Не найден TWELVE_DATA_API_KEY в GitHub Secrets")
+
+    forex_symbol = symbol[:3] + "/" + symbol[3:]
+
+    response = requests.get(
+        TWELVE_API,
+        params={
+            "symbol": forex_symbol,
+            "interval": "1h",
+            "outputsize": 200,
+            "apikey": TWELVE_API_KEY
+        },
+        timeout=20
+    )
+
+    response.raise_for_status()
+    data = response.json()
+
+    if data.get("status") == "error":
+        raise ValueError(data.get("message", "Ошибка Twelve Data"))
+
+    values = data.get("values")
+
+    if not values or len(values) < 60:
+        raise ValueError("Недостаточно данных Forex")
+
+    df = pd.DataFrame(values)
+
+    df["datetime"] = pd.to_datetime(df["datetime"])
+
+    for col in ["open", "high", "low", "close"]:
+        df[col] = pd.to_numeric(df[col])
+
+    df = df.sort_values("datetime").reset_index(drop=True)
+
+    return df
+
+
+def get_crypto_data(symbol):
     response = requests.get(
         BINANCE_API,
         params={
@@ -29,14 +73,14 @@ def analyze(symbol):
             "interval": "1h",
             "limit": 200
         },
-        timeout=15
+        timeout=20
     )
-    response.raise_for_status()
 
+    response.raise_for_status()
     data = response.json()
 
     if not isinstance(data, list) or len(data) < 60:
-        return "❌ Недостаточно данных для анализа."
+        raise ValueError("Недостаточно данных криптовалюты")
 
     df = pd.DataFrame(data, columns=[
         "time", "open", "high", "low", "close",
@@ -46,6 +90,22 @@ def analyze(symbol):
 
     for col in ["open", "high", "low", "close"]:
         df[col] = pd.to_numeric(df[col])
+
+    return df
+
+
+def analyze(symbol):
+    symbol = symbol.upper().replace("/", "")
+
+    if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
+        return "❌ Неверный формат пары."
+
+    if symbol in FOREX_PAIRS:
+        df = get_forex_data(symbol)
+        market = "FOREX"
+    else:
+        df = get_crypto_data(symbol)
+        market = "CRYPTO"
 
     close = df["close"]
 
@@ -68,12 +128,15 @@ def analyze(symbol):
 
     df["atr"] = tr.rolling(14).mean()
 
-    # Используем последнюю закрытую свечу
+    # Последняя полностью закрытая свеча
     row = df.iloc[-2]
 
     price = row["close"]
     rsi = row["rsi"]
     atr = row["atr"]
+
+    if pd.isna(atr) or pd.isna(rsi):
+        raise ValueError("Недостаточно индикаторных данных")
 
     score = 0
 
@@ -109,6 +172,7 @@ def analyze(symbol):
 
     result = (
         f"🤖 AI MARKET ANALYSIS\n\n"
+        f"📊 Рынок: {market}\n"
         f"💹 Пара: {symbol}\n"
         f"⏱ Таймфрейм: 1 час\n"
         f"💰 Цена: {price:.8g}\n\n"
@@ -134,8 +198,14 @@ def analyze(symbol):
 def start(message):
     bot.reply_to(
         message,
-        "🤖 AI Market Signal Bot запущен!\n\n"
-        "Используй /signal BTCUSDT для анализа."
+        "🤖 AI MARKET SIGNAL BOT\n\n"
+        "Криптовалюты + Forex!\n\n"
+        "Используй:\n"
+        "/signal BTCUSDT\n"
+        "/signal ETHUSDT\n"
+        "/signal EURUSD\n"
+        "/signal GBPUSD\n"
+        "/markets"
     )
 
 
@@ -145,8 +215,9 @@ def help_command(message):
         message,
         "/start — запуск\n"
         "/help — помощь\n"
-        "/signal BTCUSDT — анализ пары\n"
-        "/markets — список популярных пар"
+        "/markets — список пар\n"
+        "/signal BTCUSDT — криптовалюты\n"
+        "/signal EURUSD — Forex"
     )
 
 
@@ -154,8 +225,10 @@ def help_command(message):
 def markets(message):
     bot.reply_to(
         message,
-        "📊 Популярные пары:\n"
-        "BTCUSDT\nETHUSDT\nBNBUSDT\nSOLUSDT\nXRPUSDT"
+        "₿ CRYPTO:\n"
+        "BTCUSDT\nETHUSDT\nBNBUSDT\nSOLUSDT\nXRPUSDT\n\n"
+        "💱 FOREX:\n"
+        + "\n".join(sorted(FOREX_PAIRS))
     )
 
 
@@ -172,19 +245,19 @@ def signal_command(message):
 
         result = analyze(symbol)
 
-        bot.send_message(
-            message.chat.id,
-            result
-        )
+        bot.send_message(message.chat.id, result)
 
     except Exception as error:
         print("Analysis error:", repr(error))
 
         bot.send_message(
             message.chat.id,
-            f"❌ Ошибка анализа:\n{type(error).__name__}\n{str(error)[:800]}"
+            f"❌ Ошибка анализа:\n"
+            f"{type(error).__name__}\n"
+            f"{str(error)[:800]}"
         )
 
 
 print("AI Market Signal Bot started!")
+
 bot.infinity_polling(skip_pending=True)
