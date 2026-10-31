@@ -162,21 +162,28 @@ def markets(message):
 @bot.message_handler(commands=["signal"])
 def signal_command(message):
     parts = message.text.split()
-
     symbol = parts[1] if len(parts) > 1 else "BTCUSDT"
 
     try:
-        bot.send_message(message.chat.id, "🔎 Анализирую рынок...")
+        bot.send_message(
+            message.chat.id,
+            "🔎 Анализирую рынок..."
+        )
+
         result = analyze(symbol)
-        bot.send_message(message.chat.id, result)
 
-  except Exception as error:
-    print("Analysis error:", repr(error))
+        bot.send_message(
+            message.chat.id,
+            result
+        )
 
-    bot.send_message(
-        message.chat.id,
-        f"❌ Ошибка анализа:\n{type(error).__name__}\n{str(error)[:800]}"
-    )
+    except Exception as error:
+        print("Analysis error:", repr(error))
+
+        bot.send_message(
+            message.chat.id,
+            f"❌ Ошибка анализа:\n{type(error).__name__}\n{str(error)[:800]}"
+        )
 
 
 print("AI Market Signal Bot started!")
