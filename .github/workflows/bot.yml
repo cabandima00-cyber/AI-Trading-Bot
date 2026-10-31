@@ -24,8 +24,9 @@ jobs:
       - name: Install libraries
         run: pip install -r requirements.txt
 
-      - name: Start Telegram Bot
+       - name: Start Telegram Bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          OTC_API_KEY: ${{ secrets.OTC_API_KEY }}
         run: python bot.py
