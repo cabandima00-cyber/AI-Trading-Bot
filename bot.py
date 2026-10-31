@@ -95,17 +95,17 @@ def get_crypto_data(symbol, interval="1h"):
     return df
 
 
-def analyze(symbol, interval="1h"):
+
     symbol = symbol.upper().replace("/", "")
 
     if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
         return "❌ Неверный формат пары."
 
     if symbol in FOREX_PAIRS:
-        df = get_forex_data(symbol)
+        df = get_forex_data(symbol, interval)
         market = "FOREX"
     else:
-        df = get_crypto_data(symbol)
+        df = get_crypto_data(symbol, interval)
         market = "CRYPTO"
 
     close = df["close"]
@@ -274,15 +274,31 @@ def markets(message):
 @bot.message_handler(commands=["signal"])
 def signal_command(message):
     parts = message.text.split()
-    symbol = parts[1] if len(parts) > 1 else "BTCUSDT"
+
+    symbol = parts[1].upper() if len(parts) > 1 else "BTCUSDT"
+    interval = parts[2].lower() if len(parts) > 2 else "1h"
+
+    allowed_intervals = [
+        "1min", "5min", "15min", "30min",
+        "1h", "4h", "1day", "1week"
+    ]
+
+    if interval not in allowed_intervals:
+        bot.send_message(
+            message.chat.id,
+            "❌ Неверный таймфрейм.\n"
+            "Доступно: 1min, 5min, 15min, 30min, "
+            "1h, 4h, 1day, 1week"
+        )
+        return
 
     try:
         bot.send_message(
             message.chat.id,
-            "🔎 Анализирую рынок..."
+            f"🔎 Анализирую {symbol} ({interval})..."
         )
 
-        result = analyze(symbol)
+        result = analyze(symbol, interval)
 
         bot.send_message(message.chat.id, result)
 
@@ -295,13 +311,3 @@ def signal_command(message):
             f"{type(error).__name__}\n"
             f"{str(error)[:800]}"
         )
-
-
-print("AI Market Signal Bot started!")
-
-threading.Thread(
-    target=automatic_scanner,
-    daemon=True
-).start()
-
-bot.infinity_polling(skip_pending=True)
