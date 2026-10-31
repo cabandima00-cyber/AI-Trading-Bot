@@ -6,7 +6,7 @@ import telebot
 import pandas as pd
 
 from ta.momentum import RSIIndicator
-from ta.trend import MACD
+from ta.trend import MACD, ADXIndicator
 
 TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
 TWELVE_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
@@ -125,6 +125,13 @@ def analyze(symbol, interval="1h"):
     macd = MACD(close)
     df["macd"] = macd.macd()
     df["macd_signal"] = macd.macd_signal()
+        adx_indicator = ADXIndicator(
+        high=df["high"],
+        low=df["low"],
+        close=close,
+        window=14
+    )
+    df["adx"] = adx_indicator.adx()
 
     previous_close = close.shift(1)
 
@@ -141,20 +148,23 @@ def analyze(symbol, interval="1h"):
     price = row["close"]
     rsi = row["rsi"]
     atr = row["atr"]
+    adx = row["adx"]
 
-    if pd.isna(atr) or pd.isna(rsi):
+        if pd.isna(atr) or pd.isna(rsi) or pd.isna(adx):
         raise ValueError("Недостаточно индикаторных данных")
 
     buy_conditions = (
         price > row["ema20"] > row["ema50"]
         and 50 < rsi < 68
         and row["macd"] > row["macd_signal"]
+        and adx >= 20
     )
 
     sell_conditions = (
         price < row["ema20"] < row["ema50"]
         and 32 < rsi < 50
         and row["macd"] < row["macd_signal"]
+        and adx >= 20
     )
 
     if buy_conditions:
