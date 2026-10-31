@@ -267,7 +267,13 @@ def otc_markets(message):
             timeout=20
         )
 
-        response.raise_for_status()
+        if response.status_code != 200:
+    bot.reply_to(
+        message,
+        f"❌ OTCharts HTTP {response.status_code}\n"
+        f"{response.text[:500]}"
+    )
+    return
         data = response.json()
 
         symbols = data.get("symbols", [])
