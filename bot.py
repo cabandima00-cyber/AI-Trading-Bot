@@ -120,9 +120,9 @@ def analyze(symbol, interval="1h"):
     df["ema20"] = close.ewm(span=20, adjust=False).mean()
     df["ema50"] = close.ewm(span=50, adjust=False).mean()
 
-    df["rsi"] = RSIIndicator(close, window=14).rsi()
+       df["rsi"] = RSIIndicator(close, window=14).rsi()
 
-       macd = MACD(close)
+    macd = MACD(close)
     df["macd"] = macd.macd()
     df["macd_signal"] = macd.macd_signal()
 
@@ -133,6 +133,7 @@ def analyze(symbol, interval="1h"):
         window=14
     )
     df["adx"] = adx_indicator.adx()
+
     previous_close = close.shift(1)
 
     tr = pd.concat([
@@ -150,7 +151,7 @@ def analyze(symbol, interval="1h"):
     atr = row["atr"]
     adx = row["adx"]
 
-        if pd.isna(atr) or pd.isna(rsi) or pd.isna(adx):
+    if pd.isna(atr) or pd.isna(rsi) or pd.isna(adx):
         raise ValueError("Недостаточно индикаторных данных")
 
     buy_conditions = (
