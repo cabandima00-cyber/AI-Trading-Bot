@@ -252,21 +252,26 @@ def save_backtest_trade(
         print("Backtest Save Error:", e)
         return False
 
+
 def update_backtest_trades(symbol, current_price):
     try:
         current_price = float(current_price)
 
         with sqlite3.connect("backtest.db") as conn:
+
             trades = conn.execute("""
-                SELECT id, direction, entry_price,
-                       stop_loss, take_profit
+                SELECT id, interval, direction, entry_price,
+                       stop_loss, take_profit, candle_time, created_at
                 FROM backtest_trades
                 WHERE symbol = ?
                 AND result = 'PENDING'
             """, (symbol,)).fetchall()
 
             for trade in trades:
-                trade_id, direction, entry, sl, tp = trade
+                (
+                    trade_id, interval, direction, entry,
+                    sl, tp, candle_time, created_at
+                ) = trade
 
                 result = None
                 exit_price = None
@@ -287,36 +292,66 @@ def update_backtest_trades(symbol, current_price):
                         result = "WIN"
                         exit_price = tp
 
-                if result:
-                    if direction == "BUY":
-                        profit = (
-                            (exit_price - entry) / entry
-                        ) * 100
-                    else:
-                        profit = (
-                            (entry - exit_price) / entry
-                        ) * 100
+                if result is None:
+                    continue
 
-                    conn.execute("""
-                        UPDATE backtest_trades
-                        SET result = ?,
-                            exit_price = ?,
-                            profit_percent = ?,
-                            closed_at = ?
-                        WHERE id = ?
-                        AND result = 'PENDING'
-                    """, (
-                        result,
-                        exit_price,
-                        profit,
-                        int(time.time()),
-                        trade_id
-                    ))
+                if entry <= 0:
+                    continue
+
+                if direction == "BUY":
+                    profit = ((exit_price - entry) / entry) * 100
+                else:
+                    profit = ((entry - exit_price) / entry) * 100
+
+                closed_at = int(time.time())
+
+                cursor = conn.execute("""
+                    UPDATE backtest_trades
+                    SET result = ?,
+                        exit_price = ?,
+                        profit_percent = ?,
+                        closed_at = ?
+                    WHERE id = ?
+                    AND result = 'PENDING'
+                """, (
+                    result,
+                    exit_price,
+                    profit,
+                    closed_at,
+                    trade_id
+                ))
+
+                if cursor.rowcount == 1:
+                    supabase_trade = {
+                        "symbol": symbol,
+                        "interval": interval,
+                        "direction": direction,
+                        "entry_price": float(entry),
+                        "exit_price": float(exit_price),
+                        "stop_loss": float(sl) if sl is not None else None,
+                        "take_profit": float(tp) if tp is not None else None,
+                        "result": result,
+                        "profit_percent": float(profit),
+                        "created_at": int(created_at),
+                        "closed_at": closed_at,
+                        "candle_time": int(candle_time)
+                    }
+
+                    try:
+                        BACKTEST_SUPABASE_QUEUE.put_nowait(
+                            supabase_trade
+                        )
+                        print(
+                            f"Backtest closed: {symbol} "
+                            f"{direction} {result}"
+                        )
+                    except queue.Full:
+                        print("Backtest Supabase queue is full")
 
         return True
 
     except Exception as e:
-        print("Backtest Update Error:", e)
+        print("Backtest Update Error:", repr(e))
         return False
 
 
@@ -482,7 +517,7 @@ def backtest_supabase_worker():
                 try:
                     supabase.table("backtest_trades").upsert(
                         trade,
-                        on_conflict="id"
+on_conflict="symbol,interval,candle_time"
                     ).execute()
 
                     print("Supabase: backtest trade saved")
