@@ -1031,7 +1031,7 @@ def otc_database_status(message):
         )
 
 
-print("Проверка: запускаю загрузку OTC истории...")
+print("ПРОВЕРКА: bot.py дошёл до загрузки OTC!", flush=True)
 load_otc_history()
 print("Проверка: загрузка OTC истории завершена.")
 
