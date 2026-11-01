@@ -226,6 +226,26 @@ def save_backtest_trade(
                 int(candle_time)
             ))
 
+
+        saved_trade = {
+            "symbol": symbol,
+            "interval": interval,
+            "direction": direction,
+            "entry_price": float(entry_price),
+            "stop_loss": float(stop_loss) if stop_loss is not None else None,
+            "take_profit": float(take_profit) if take_profit is not None else None,
+            "result": "PENDING",
+            "profit_percent": 0,
+            "created_at": int(time.time()),
+            "candle_time": int(candle_time)
+        }
+
+        try:
+            BACKTEST_SUPABASE_QUEUE.put_nowait(saved_trade)
+            print("Backtest queued for Supabase:", symbol)
+        except queue.Full:
+            print("Backtest Supabase queue is full")
+
         return True
 
     except Exception as e:
