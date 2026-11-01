@@ -52,8 +52,20 @@ def save_otc_tick(data):
             "price": price
         })
 
-    except (TypeError, ValueError, AttributeError):
-        pass
+        with sqlite3.connect("otc_history.db") as conn:
+            conn.execute(
+                """
+                INSERT INTO otc_ticks (symbol, timestamp, price)
+                VALUES (?, ?, ?)
+                """,
+                (symbol, timestamp, price)
+            )
+
+    except (TypeError, ValueError, AttributeError) as error:
+        print("OTC tick error:", error)
+
+    except sqlite3.Error as error:
+        print("OTC database error:", error)
 def run_otc_stream():
     import time
 
