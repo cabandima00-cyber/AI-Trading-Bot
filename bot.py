@@ -1071,11 +1071,6 @@ threading.Thread(
 print("BinoDex stream thread started!")
 
 threading.Thread(
-    target=run_otc_stream,
-    daemon=True
-).start()
-
-threading.Thread(
     target=automatic_scanner,
     daemon=True
 ).start()
