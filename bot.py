@@ -1252,6 +1252,7 @@ def analyze(symbol, interval="1h"):
         stop = None
         target = None
 
+
     # BACKTEST: сохраняем только торговые сигналы
     if signal == "🟢 BUY" and candle_time is not None:
         save_backtest_trade(
@@ -1264,8 +1265,7 @@ def analyze(symbol, interval="1h"):
             take_profit=target
         )
 
-
-     elif signal == "🔴 SELL" and candle_time is not None:
+    elif signal == "🔴 SELL" and candle_time is not None:
         save_backtest_trade(
             symbol=f"{market}:{symbol}",
             interval=interval,
