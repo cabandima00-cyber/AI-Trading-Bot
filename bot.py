@@ -1041,6 +1041,12 @@ threading.Thread(
     target=supabase_worker,
     daemon=True
 ).start()
+threading.Thread(
+    target=run_otc_stream,
+    daemon=True
+).start()
+
+print("BinoDex stream thread started!")
 
 threading.Thread(
     target=run_otc_stream,
