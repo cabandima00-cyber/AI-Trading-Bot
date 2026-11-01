@@ -165,11 +165,13 @@ def init_backtest_db():
 
 init_backtest_db()
 
+
 def save_backtest_trade(
     symbol,
     interval,
     direction,
     entry_price,
+    candle_time,
     stop_loss=None,
     take_profit=None
 ):
@@ -183,14 +185,18 @@ def save_backtest_trade(
                 FROM backtest_trades
                 WHERE symbol = ?
                 AND interval = ?
-                AND result = 'PENDING'
+                AND candle_time = ?
                 LIMIT 1
-            """, (symbol, interval)).fetchone()
+            """, (
+                symbol,
+                interval,
+                int(candle_time)
+            )).fetchone()
 
             if existing:
                 print(
-                    f"Backtest duplicate skipped: "
-                    f"{symbol} {interval}"
+                    f"Duplicate candle skipped: "
+                    f"{symbol} {interval} {candle_time}"
                 )
                 return False
 
@@ -204,9 +210,10 @@ def save_backtest_trade(
                     take_profit,
                     result,
                     profit_percent,
-                    created_at
+                    created_at,
+                    candle_time
                 )
-                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?)
+                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)
             """, (
                 symbol,
                 interval,
@@ -214,7 +221,8 @@ def save_backtest_trade(
                 float(entry_price),
                 float(stop_loss) if stop_loss is not None else None,
                 float(take_profit) if take_profit is not None else None,
-                int(time.time())
+                int(time.time()),
+                int(candle_time)
             ))
 
         return True
@@ -222,6 +230,7 @@ def save_backtest_trade(
     except Exception as e:
         print("Backtest Save Error:", e)
         return False
+
 
 def get_otc_database_count():
     with sqlite3.connect("otc_history.db") as conn:
