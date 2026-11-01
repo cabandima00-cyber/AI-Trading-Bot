@@ -13,6 +13,7 @@ import telebot
 import pandas as pd
 from supabase import create_client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
+print("Supabase URL configured:", bool(SUPABASE_URL), flush=True)
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
 
 supabase = None
