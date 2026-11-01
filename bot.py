@@ -308,6 +308,46 @@ def get_binodex_data(symbol, interval="1h"):
     return df
 
 
+def get_crypto_data(symbol, interval="1h"):
+    interval_map = {
+        "1min": "1m",
+        "5min": "5m",
+        "15min": "15m",
+        "30min": "30m",
+        "1h": "1h",
+        "4h": "4h",
+        "1day": "1d",
+        "1week": "1w"
+    }
+
+    binance_interval = interval_map.get(interval)
+
+    if not binance_interval:
+        raise ValueError("Неподдерживаемый таймфрейм Binance")
+
+    response = requests.get(
+        "https://data-api.binance.vision/api/v3/klines",
+        params={
+            "symbol": symbol,
+            "interval": binance_interval,
+            "limit": 200
+        },
+        timeout=20
+    )
+
+    response.raise_for_status()
+    data = response.json()
+
+    df = pd.DataFrame(data, columns=[
+        "time", "open", "high", "low", "close", "volume",
+        "close_time", "quote_volume", "trades",
+        "taker_buy_base", "taker_buy_quote", "ignore"
+    ])
+
+    for col in ["open", "high", "low", "close", "volume"]:
+        df[col] = pd.to_numeric(df[col])
+
+    return df
 def analyze(symbol, interval="1h"):
     is_otc = symbol.upper().startswith("OTC:")
 
