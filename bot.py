@@ -80,7 +80,7 @@ def load_otc_history():
 
             while True:
                 response = (
-                    supabase.table("otc_ticks")
+                    supabase.schema("public").table("otc_ticks")
                     .select("symbol,timestamp,price")
                     .order("timestamp")
                     .range(offset, offset + 999)
