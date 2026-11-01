@@ -381,8 +381,17 @@ def analyze(symbol, interval="1h"):
             df = get_crypto_data(symbol, interval)
             market = "CRYPTO"
 
-    if len(df) < 60:
-        return "⏳ Недостаточно свечей для анализа. Нужно минимум 60."
+ if len(df) < 60:
+    current = len(df)
+    missing = 60 - current
+
+    return (
+        f"⏳ Недостаточно свечей для анализа.\n\n"
+        f"📊 Таймфрейм: {interval}\n"
+        f"🕯 Накоплено свечей: {current}/60\n"
+        f"📥 Осталось накопить: {missing}\n\n"
+        f"Дождись накопления истории и попробуй снова."
+    )
 
     # Старший таймфрейм
     higher_timeframes = {
