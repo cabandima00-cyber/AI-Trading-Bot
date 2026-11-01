@@ -39,10 +39,31 @@ def init_otc_database():
 
 init_otc_database()
 def get_otc_database_count():
-    with sqlite3.connect("otc_history.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM otc_ticks")
-        return cursor.fetchone()[0]
+    def load_otc_history():
+    try:
+        with sqlite3.connect("otc_history.db") as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT symbol, timestamp, price
+                FROM otc_ticks
+                ORDER BY timestamp ASC
+            """)
+
+            rows = cursor.fetchall()
+
+        OTC_TICKS.clear()
+
+        for symbol, timestamp, price in rows:
+            OTC_TICKS[symbol].append({
+                "timestamp": timestamp,
+                "price": price
+            })
+
+        print(f"OTC history loaded: {len(rows)} ticks")
+
+    except sqlite3.Error as error:
+        print("OTC history loading error:", error)
 def save_otc_tick(data):
     try:
         symbol = data.get("symbol", "").upper()
