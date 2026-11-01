@@ -990,6 +990,12 @@ load_otc_history()
 print("Проверка: загрузка OTC истории завершена.")
 
 print("AI Market Signal Bot started!")
+
+threading.Thread(
+    target=supabase_worker,
+    daemon=True
+).start()
+
 threading.Thread(
     target=run_otc_stream,
     daemon=True
