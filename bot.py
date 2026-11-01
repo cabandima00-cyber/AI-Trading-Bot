@@ -231,6 +231,74 @@ def save_backtest_trade(
         print("Backtest Save Error:", e)
         return False
 
+def update_backtest_trades(symbol, current_price):
+    try:
+        current_price = float(current_price)
+
+        with sqlite3.connect("backtest.db") as conn:
+            trades = conn.execute("""
+                SELECT id, direction, entry_price,
+                       stop_loss, take_profit
+                FROM backtest_trades
+                WHERE symbol = ?
+                AND result = 'PENDING'
+            """, (symbol,)).fetchall()
+
+            for trade in trades:
+                trade_id, direction, entry, sl, tp = trade
+
+                result = None
+                exit_price = None
+
+                if direction == "BUY":
+                    if sl is not None and current_price <= sl:
+                        result = "LOSS"
+                        exit_price = sl
+                    elif tp is not None and current_price >= tp:
+                        result = "WIN"
+                        exit_price = tp
+
+                elif direction == "SELL":
+                    if sl is not None and current_price >= sl:
+                        result = "LOSS"
+                        exit_price = sl
+                    elif tp is not None and current_price <= tp:
+                        result = "WIN"
+                        exit_price = tp
+
+                if result:
+                    if direction == "BUY":
+                        profit = (
+                            (exit_price - entry) / entry
+                        ) * 100
+                    else:
+                        profit = (
+                            (entry - exit_price) / entry
+                        ) * 100
+
+                    conn.execute("""
+                        UPDATE backtest_trades
+                        SET result = ?,
+                            exit_price = ?,
+                            profit_percent = ?,
+                            closed_at = ?
+                        WHERE id = ?
+                        AND result = 'PENDING'
+                    """, (
+                        result,
+                        exit_price,
+                        profit,
+                        int(time.time()),
+                        trade_id
+                    ))
+
+        return True
+
+    except Exception as e:
+        print("Backtest Update Error:", e)
+        return False
+
+
 
 def get_otc_database_count():
     with sqlite3.connect("otc_history.db") as conn:
