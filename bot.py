@@ -172,6 +172,10 @@ def save_otc_tick(data):
         print("OTC database error:", error)
 def supabase_worker():
     while True:
+        if supabase is None:
+            time.sleep(5)
+            continue
+
         batch = []
 
         try:
@@ -184,20 +188,26 @@ def supabase_worker():
                 except queue.Empty:
                     break
 
-            if supabase is not None and batch:
-                supabase.table("otc_ticks").insert(batch).execute()
-                print(f"Supabase: saved {len(batch)} ticks")
+            # Повторяем отправку, пока пакет не сохранится
+            while True:
+                try:
+                    supabase.table("otc_ticks").insert(batch).execute()
+                    print(f"Supabase: saved {len(batch)} ticks")
+                    break
+
+                except Exception as error:
+                    print("Supabase retry error:", repr(error))
+                    time.sleep(10)
+
+            for _ in batch:
+                SUPABASE_QUEUE.task_done()
 
         except queue.Empty:
             continue
 
         except Exception as error:
-            print("Supabase save error:", repr(error))
+            print("Supabase worker error:", repr(error))
             time.sleep(5)
-
-        finally:
-            for _ in batch:
-                SUPABASE_QUEUE.task_done()
 def run_otc_stream():
     import time
 
