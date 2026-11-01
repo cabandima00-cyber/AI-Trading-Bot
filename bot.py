@@ -35,6 +35,36 @@ def save_otc_tick(data):
 
     except (TypeError, ValueError, AttributeError):
         pass
+def build_otc_candles(symbol, interval="1min"):
+    seconds = OTC_TIMEFRAMES.get(interval)
+
+    if seconds is None:
+        raise ValueError("Неподдерживаемый таймфрейм")
+
+    ticks = list(OTC_TICKS.get(symbol.upper(), []))
+
+    if not ticks:
+        raise ValueError("Пока нет котировок для этой пары")
+
+    df = pd.DataFrame(ticks)
+
+    df["time"] = pd.to_datetime(
+        df["timestamp"], unit="ms", utc=True
+    )
+
+    df["candle_time"] = df["time"].dt.floor(f"{seconds}s")
+
+    candles = df.groupby("candle_time").agg(
+        open=("price", "first"),
+        high=("price", "max"),
+        low=("price", "min"),
+        close=("price", "last"),
+        volume=("price", "count")
+    ).reset_index()
+
+    candles.rename(columns={"candle_time": "time"}, inplace=True)
+
+    return candles
 OTC_TICKS = defaultdict(lambda: deque(maxlen=50000))
 
 from ta.momentum import RSIIndicator
