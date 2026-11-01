@@ -474,6 +474,7 @@ def signal_command(message):
             f"{type(error).__name__}\n"
             f"{str(error)[:800]}"
         )
+
 @bot.message_handler(commands=["otctest"])
 def otc_test(message):
     import time
@@ -484,10 +485,10 @@ def otc_test(message):
     ticks = []
 
     @sio.on("graphic", namespace="/graphic")
-   def on_graphic(data):
-    if isinstance(data, dict):
-        ticks.append(data)
-        save_otc_tick(data)
+    def on_graphic(data):
+        if isinstance(data, dict):
+            ticks.append(data)
+            save_otc_tick(data)
 
     try:
         sio.connect(
@@ -522,13 +523,19 @@ def otc_test(message):
                 f"Получено обновлений: {len(ticks)}"
             )
         else:
-            bot.reply_to(message, "⚠️ Подключение есть, но котировки не получены.")
+            bot.reply_to(
+                message,
+                "⚠️ Подключение есть, но котировки не получены."
+            )
 
     except Exception as error:
         if sio.connected:
             sio.disconnect()
 
         bot.reply_to(message, f"❌ Ошибка BinoDex: {error}")
+
+
+
 print("AI Market Signal Bot started!")
 
 threading.Thread(
