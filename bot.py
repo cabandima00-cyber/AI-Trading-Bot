@@ -40,6 +40,14 @@ def run_otc_stream():
 
     sio = socketio.Client(reconnection=True)
 
+    otc_pairs = [
+        "EUR/USD",
+        "GBP/USD",
+        "AUD/USD",
+        "USD/JPY",
+        "EUR/JPY"
+    ]
+
     @sio.on("graphic", namespace="/graphic")
     def on_graphic(data):
         if isinstance(data, dict):
@@ -47,16 +55,18 @@ def run_otc_stream():
 
     @sio.on("connect", namespace="/graphic")
     def on_connect():
-        sio.emit(
-            "graphic",
-            {
-                "method": "SUBSCRIBE",
-                "symbol": "EUR/USD",
-                "interval": "1m",
-                "otc": True
-            },
-            namespace="/graphic"
-        )
+        for pair in otc_pairs:
+            sio.emit(
+                "graphic",
+                {
+                    "method": "SUBSCRIBE",
+                    "symbol": pair,
+                    "interval": "1m",
+                    "otc": True
+                },
+                namespace="/graphic"
+            )
+
         print("BinoDex OTC stream connected!")
 
     while True:
