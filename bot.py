@@ -479,24 +479,27 @@ def analyze(symbol, interval="1h"):
 
     df["atr"] = tr.rolling(14).mean()
 
+    
     if "volume" in df.columns:
-    df["volume_sma"] = df["volume"].rolling(20).mean()
-else:
-    df["volume"] = 0
-    df["volume_sma"] = 0
+        df["volume_sma"] = df["volume"].rolling(20).mean()
+    else:
+        df["volume"] = 0
+        df["volume_sma"] = 0
+
     row = df.iloc[-2]
+
     volume_confirm = True
 
-if market != "FOREX" and "volume_sma" in df.columns:
-    current_volume = row["volume"]
-    average_volume = row["volume_sma"]
+    if market != "FOREX":
+        current_volume = row["volume"]
+        average_volume = row["volume_sma"]
 
-    volume_confirm = (
-        pd.notna(current_volume)
-        and pd.notna(average_volume)
-        and average_volume > 0
-        and current_volume > average_volume
-    )
+        volume_confirm = (
+            pd.notna(current_volume)
+            and pd.notna(average_volume)
+            and average_volume > 0
+            and current_volume > average_volume
+        )
 
     price = row["close"]
     rsi = row["rsi"]
@@ -512,6 +515,7 @@ if market != "FOREX" and "volume_sma" in df.columns:
         and row["macd"] > row["macd_signal"]
         and adx >= 20
         and higher_trend in ("UP", "NOT_USED")
+        and volume_confirm
     )
 
     sell_conditions = (
@@ -520,9 +524,11 @@ if market != "FOREX" and "volume_sma" in df.columns:
         and row["macd"] < row["macd_signal"]
         and adx >= 20
         and higher_trend in ("DOWN", "NOT_USED")
+        and volume_confirm
     )
 
     if buy_conditions:
+
         signal = "🟢 BUY"
         stop = price - atr * 1.5
         target = price + atr * 3
