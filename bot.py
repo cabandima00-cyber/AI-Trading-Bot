@@ -1,3 +1,4 @@
+from collections import defaultdict, deque
 import socketio
 import threading
 import os
@@ -5,6 +6,20 @@ import re
 import requests
 import telebot
 import pandas as pd
+OTC_TIMEFRAMES = {
+    "15sec": 15,
+    "30sec": 30,
+    "1min": 60,
+    "5min": 300,
+    "15min": 900,
+    "30min": 1800,
+    "1h": 3600,
+    "4h": 14400,
+    "1day": 86400,
+    "1week": 604800
+}
+
+OTC_TICKS = defaultdict(lambda: deque(maxlen=50000))
 
 from ta.momentum import RSIIndicator
 from ta.trend import MACD, ADXIndicator
