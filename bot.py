@@ -195,7 +195,10 @@ def analyze(symbol, interval="1h"):
         if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
             return "❌ Неверный формат OTC-пары."
 
-        df = get_binodex_data(symbol, interval)
+       df = build_otc_candles(symbol, interval)
+
+if len(df) < 60:
+    return "⏳ Пока недостаточно OTC-свечей. Нужно минимум 60."
         market = "BINODEX OTC"
 
     else:
