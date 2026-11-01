@@ -425,18 +425,24 @@ def analyze(symbol, interval="1h"):
                 symbol, higher_interval
             )
 
+        
         if len(higher_df) < 60:
-            return (
-                f"⏳ Недостаточно свечей старшего "
-                f"таймфрейма {higher_interval}.\n"
-                f"Нужно минимум 60."
-            )
+            if is_otc:
+                higher_trend = "NOT_USED"
+            else:
+                return (
+                    f"⏳ Недостаточно свечей старшего "
+                    f"таймфрейма {higher_interval}.\n"
+                    f"Нужно минимум 60."
+                )
 
-        higher_close = higher_df["close"]
+        else:
+            higher_close = higher_df["close"]
 
-        higher_ema20 = higher_close.ewm(
-            span=20, adjust=False
-        ).mean()
+            higher_ema20 = higher_close.ewm(
+                span=20, adjust=False
+            ).mean()
+
 
         higher_ema50 = higher_close.ewm(
             span=50, adjust=False
