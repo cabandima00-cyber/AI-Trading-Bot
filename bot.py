@@ -186,6 +186,7 @@ def get_binodex_data(symbol, interval="1h"):
         raise ValueError("Недостаточно корректных OTC-свечей")
 
     return df
+
 def analyze(symbol, interval="1h"):
     is_otc = symbol.upper().startswith("OTC:")
 
@@ -195,33 +196,25 @@ def analyze(symbol, interval="1h"):
         if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
             return "❌ Неверный формат OTC-пары."
 
-       df = build_otc_candles(symbol, interval)
+        df = build_otc_candles(symbol, interval)
+        market = "BINODEX OTC"
 
-if is_otc:
-    symbol = symbol[4:].strip().upper()
+    else:
+        symbol = symbol.upper().replace("/", "")
 
-    if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
-        return "❌ Неверный формат OTC-пары."
+        if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
+            return "❌ Неверный формат пары."
 
-    df = build_otc_candles(symbol, interval)
+        if symbol in FOREX_PAIRS:
+            df = get_forex_data(symbol, interval)
+            market = "FOREX"
+        else:
+            df = get_crypto_data(symbol, interval)
+            market = "CRYPTO"
 
     if len(df) < 60:
-        return "⏳ Пока недостаточно OTC-свечей. Нужно минимум 60."
+        return "⏳ Недостаточно свечей для анализа. Нужно минимум 60."
 
-    market = "BINODEX OTC"
-
-else:
-    symbol = symbol.upper().replace("/", "")
-
-    if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
-        return "❌ Неверный формат пары."
-
-    if symbol in FOREX_PAIRS:
-        df = get_forex_data(symbol, interval)
-        market = "FOREX"
-    else:
-        df = get_crypto_data(symbol, interval)
-        market = "CRYPTO"
     close = df["close"]
 
     df["ema20"] = close.ewm(span=20, adjust=False).mean()
@@ -313,6 +306,7 @@ else:
     result += "⚠️ Аналитический сигнал, не гарантия прибыли."
 
     return result
+
 
 
 @bot.message_handler(commands=["otc"])
