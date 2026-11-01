@@ -1251,22 +1251,24 @@ def analyze(symbol, interval="1h"):
         stop = None
         target = None
     # BACKTEST: сохраняем только торговые сигналы
-    if signal == "🟢 BUY":
+      if signal == "🟢 BUY" and candle_time is not None:
         save_backtest_trade(
-            symbol=symbol,
+            symbol=f"{market}:{symbol}",
             interval=interval,
             direction="BUY",
             entry_price=price,
+            candle_time=candle_time,
             stop_loss=stop,
             take_profit=target
         )
 
-    elif signal == "🔴 SELL":
+     elif signal == "🔴 SELL" and candle_time is not None:
         save_backtest_trade(
-            symbol=symbol,
+            symbol=f"{market}:{symbol}",
             interval=interval,
             direction="SELL",
             entry_price=price,
+            candle_time=candle_time,
             stop_loss=stop,
             take_profit=target
         )
