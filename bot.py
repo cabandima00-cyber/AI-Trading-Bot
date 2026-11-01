@@ -805,8 +805,17 @@ def analyze_market_regime(df):
             (atr.iloc[-1] / close.iloc[-1]) * 100
         )
 
+        atr_percent_history = (
+            (atr / close * 100)
+            .replace([float("inf"), float("-inf")], float("nan"))
+            .dropna()
+        )
+
+        if len(atr_percent_history) < 20:
+            return result
+
         atr_median = float(
-            (atr / close * 100).rolling(50).median().iloc[-1]
+            atr_percent_history.tail(50).median()
         )
 
         result["adx"] = round(adx, 2)
