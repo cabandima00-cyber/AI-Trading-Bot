@@ -902,4 +902,78 @@ threading.Thread(
     daemon=True
 ).start()
 
+
+@bot.message_handler(commands=["otctimeframe"])
+def otc_timeframe_menu(message):
+    parts = message.text.split()
+
+    if len(parts) < 2:
+        bot.reply_to(
+            message,
+            "Используй команду:\n/otctimeframe EUR/USD"
+        )
+        return
+
+    symbol = parts[1].upper().replace("OTC:", "")
+
+    if not symbol.endswith("-OTC"):
+        symbol += "-OTC"
+
+    if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
+        bot.reply_to(message, "❌ Неверный формат OTC-пары.")
+        return
+
+    intervals = [
+        ("15 сек", "15sec"),
+        ("30 сек", "30sec"),
+        ("1 мин", "1min"),
+        ("5 мин", "5min"),
+        ("15 мин", "15min"),
+        ("30 мин", "30min"),
+        ("1 час", "1h"),
+        ("4 часа", "4h"),
+        ("1 день", "1day"),
+        ("1 неделя", "1week")
+    ]
+
+    keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
+
+    for label, interval in intervals:
+        keyboard.add(
+            telebot.types.InlineKeyboardButton(
+                text=label,
+                callback_data=f"otctf|{symbol}|{interval}"
+            )
+        )
+
+    bot.reply_to(
+        message,
+        f"📊 OTC-пара: {symbol}\n\nВыбери таймфрейм:",
+        reply_markup=keyboard
+    )
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("otctf|"))
+def otc_timeframe_callback(call):
+    try:
+        _, symbol, interval = call.data.split("|")
+
+        bot.answer_callback_query(call.id)
+
+        bot.send_message(
+            call.message.chat.id,
+            f"🔎 Анализирую OTC:{symbol} ({interval})..."
+        )
+
+        result = analyze(f"OTC:{symbol}", interval)
+
+        bot.send_message(call.message.chat.id, result)
+
+    except Exception as error:
+        print("OTC timeframe error:", repr(error))
+        bot.send_message(
+            call.message.chat.id,
+            f"❌ Ошибка: {type(error).__name__}"
+        )
+
 bot.infinity_polling(skip_pending=True)
