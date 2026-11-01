@@ -134,6 +134,34 @@ def save_otc_tick(data):
 
     except sqlite3.Error as error:
         print("OTC database error:", error)
+def supabase_worker():
+    while True:
+        batch = []
+
+        try:
+            first_tick = SUPABASE_QUEUE.get(timeout=5)
+            batch.append(first_tick)
+
+            while len(batch) < 100:
+                try:
+                    batch.append(SUPABASE_QUEUE.get_nowait())
+                except queue.Empty:
+                    break
+
+            if supabase is not None and batch:
+                supabase.table("otc_ticks").insert(batch).execute()
+                print(f"Supabase: saved {len(batch)} ticks")
+
+        except queue.Empty:
+            continue
+
+        except Exception as error:
+            print("Supabase save error:", repr(error))
+            time.sleep(5)
+
+        finally:
+            for _ in batch:
+                SUPABASE_QUEUE.task_done()
 def run_otc_stream():
     import time
 
