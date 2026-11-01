@@ -872,6 +872,13 @@ def analyze(symbol, interval="1h"):
         f"💪 Сила сигнала: {strength}/100\n"
         f"📈 RSI: {rsi:.2f}\n"
         f"📊 ADX: {adx:.2f}\n"
+        f"\n🧠 SMC ANALYSIS\n"
+        f"Структура: {smc['structure']}\n"
+        f"BOS: {smc['bos']}\n"
+        f"CHOCH: {smc['choch']}\n"
+        f"Liquidity Sweep: {smc['sweep']}\n"
+        f"SMC Direction: {smc['direction']}\n"
+
         f"EMA 20: {row['ema20']:.8g}\n"
         f"EMA 50: {row['ema50']:.8g}\n"
         f"MACD: {row['macd']:.8g}\n\n"
