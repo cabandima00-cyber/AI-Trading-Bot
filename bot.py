@@ -1051,18 +1051,23 @@ def analyze(symbol, interval="1h"):
         f"📈 RSI: {rsi:.2f}\n"
         f"📊 ADX: {adx:.2f}\n"
         f"\n🧠 SMC ANALYSIS\n"
-        f"Структура: {smc['structure']}\n"
+         f"Структура: {smc['structure']}\n"
         f"BOS: {smc['bos']}\n"
         f"CHOCH: {smc['choch']}\n"
         f"Liquidity Sweep: {smc['sweep']}\n"
         f"SMC Direction: {smc['direction']}\n"
-
+        f"\n💧 LIQUIDITY ANALYSIS\n"
+        f"BSL: {liquidity['bsl']}\n"
+        f"SSL: {liquidity['ssl']}\n"
+        f"Equal Highs: {liquidity['equal_highs']}\n"
+        f"Equal Lows: {liquidity['equal_lows']}\n"
+        f"Liquidity Grab: {liquidity['grab']}\n"
+        f"Liquidity Direction: {liquidity['direction']}\n"
         f"EMA 20: {row['ema20']:.8g}\n"
         f"EMA 50: {row['ema50']:.8g}\n"
         f"MACD: {row['macd']:.8g}\n\n"
         f"🔎 Старший ТФ: {higher_interval or '—'}\n"
         f"📊 Тренд старшего ТФ: {trend_text}\n\n"
-    )
 
     if stop is not None:
         result += (
