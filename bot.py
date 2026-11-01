@@ -129,6 +129,23 @@ def save_backtest_trade(
         import time
 
         with sqlite3.connect("backtest.db") as conn:
+
+            existing = conn.execute("""
+                SELECT id
+                FROM backtest_trades
+                WHERE symbol = ?
+                AND interval = ?
+                AND result = 'PENDING'
+                LIMIT 1
+            """, (symbol, interval)).fetchone()
+
+            if existing:
+                print(
+                    f"Backtest duplicate skipped: "
+                    f"{symbol} {interval}"
+                )
+                return False
+
             conn.execute("""
                 INSERT INTO backtest_trades (
                     symbol,
