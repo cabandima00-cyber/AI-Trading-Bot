@@ -38,4 +38,6 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           OTC_API_KEY: ${{ secrets.OTC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: python bot.py
