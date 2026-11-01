@@ -497,6 +497,7 @@ def signal_command(message):
     interval = parts[2].lower() if len(parts) > 2 else "1h"
 
     allowed_intervals = [
+        "15sec", "30sec",
         "1min", "5min", "15min", "30min",
         "1h", "4h", "1day", "1week"
     ]
@@ -505,10 +506,18 @@ def signal_command(message):
         bot.send_message(
             message.chat.id,
             "❌ Неверный таймфрейм.\n"
-            "Доступно: 1min, 5min, 15min, 30min, "
-            "1h, 4h, 1day, 1week"
+            "Доступно: 15sec, 30sec, 1min, 5min, "
+            "15min, 30min, 1h, 4h, 1day, 1week"
         )
         return
+
+    if symbol.startswith("OTC:"):
+        otc_symbol = symbol[4:]
+
+        if not otc_symbol.endswith("-OTC"):
+            otc_symbol += "-OTC"
+
+        symbol = "OTC:" + otc_symbol
 
     try:
         bot.send_message(
