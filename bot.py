@@ -22,6 +22,36 @@ print(
 )
 print("Supabase URL configured:", bool(SUPABASE_URL), flush=True)
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
+def get_candle_timestamp(row):
+    try:
+        # Binance
+        if "close_time" in row.index:
+            value = row["close_time"]
+
+            if pd.notna(value):
+                return int(value) // 1000
+
+        # Twelve Data
+        if "datetime" in row.index:
+            value = pd.to_datetime(
+                row["datetime"],
+                utc=True
+            )
+            return int(value.timestamp())
+
+        # BinoDex OTC
+        if "time" in row.index:
+            value = pd.to_datetime(
+                row["time"],
+                utc=True
+            )
+            return int(value.timestamp())
+
+        return None
+
+    except Exception as e:
+        print("Candle timestamp error:", e)
+        return None
 
 supabase = None
 
