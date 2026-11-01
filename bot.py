@@ -307,6 +307,7 @@ def get_binodex_data(symbol, interval="1h"):
 
     return df
 
+
 def analyze(symbol, interval="1h"):
     is_otc = symbol.upper().startswith("OTC:")
 
@@ -335,14 +336,85 @@ def analyze(symbol, interval="1h"):
     if len(df) < 60:
         return "⏳ Недостаточно свечей для анализа. Нужно минимум 60."
 
+    # Старший таймфрейм
+    higher_timeframes = {
+        "15sec": "1min",
+        "30sec": "1min",
+        "1min": "5min",
+        "5min": "15min",
+        "15min": "1h",
+        "30min": "4h",
+        "1h": "4h",
+        "4h": "1day",
+        "1day": "1week",
+        "1week": None
+    }
+
+    higher_interval = higher_timeframes.get(interval)
+
+    higher_trend = "NOT_USED"
+
+    if higher_interval:
+        if is_otc:
+            higher_df = build_otc_candles(
+                symbol, higher_interval
+            )
+        elif market == "FOREX":
+            higher_df = get_forex_data(
+                symbol, higher_interval
+            )
+        else:
+            higher_df = get_crypto_data(
+                symbol, higher_interval
+            )
+
+        if len(higher_df) < 60:
+            return (
+                f"⏳ Недостаточно свечей старшего "
+                f"таймфрейма {higher_interval}.\n"
+                f"Нужно минимум 60."
+            )
+
+        higher_close = higher_df["close"]
+
+        higher_ema20 = higher_close.ewm(
+            span=20, adjust=False
+        ).mean()
+
+        higher_ema50 = higher_close.ewm(
+            span=50, adjust=False
+        ).mean()
+
+        h_price = higher_close.iloc[-2]
+        h_ema20 = higher_ema20.iloc[-2]
+        h_ema50 = higher_ema50.iloc[-2]
+
+        if h_price > h_ema20 > h_ema50:
+            higher_trend = "UP"
+
+        elif h_price < h_ema20 < h_ema50:
+            higher_trend = "DOWN"
+
+        else:
+            higher_trend = "SIDEWAYS"
+
+    # Основные индикаторы
     close = df["close"]
 
-    df["ema20"] = close.ewm(span=20, adjust=False).mean()
-    df["ema50"] = close.ewm(span=50, adjust=False).mean()
+    df["ema20"] = close.ewm(
+        span=20, adjust=False
+    ).mean()
 
-    df["rsi"] = RSIIndicator(close, window=14).rsi()
+    df["ema50"] = close.ewm(
+        span=50, adjust=False
+    ).mean()
+
+    df["rsi"] = RSIIndicator(
+        close, window=14
+    ).rsi()
 
     macd = MACD(close)
+
     df["macd"] = macd.macd()
     df["macd_signal"] = macd.macd_signal()
 
@@ -352,6 +424,7 @@ def analyze(symbol, interval="1h"):
         close=close,
         window=14
     )
+
     df["adx"] = adx_indicator.adx()
 
     previous_close = close.shift(1)
@@ -379,6 +452,7 @@ def analyze(symbol, interval="1h"):
         and 50 < rsi < 68
         and row["macd"] > row["macd_signal"]
         and adx >= 20
+        and higher_trend in ("UP", "NOT_USED")
     )
 
     sell_conditions = (
@@ -386,6 +460,7 @@ def analyze(symbol, interval="1h"):
         and 32 < rsi < 50
         and row["macd"] < row["macd_signal"]
         and adx >= 20
+        and higher_trend in ("DOWN", "NOT_USED")
     )
 
     if buy_conditions:
@@ -403,6 +478,15 @@ def analyze(symbol, interval="1h"):
         stop = None
         target = None
 
+    if higher_trend == "UP":
+        trend_text = "🟢 Восходящий"
+    elif higher_trend == "DOWN":
+        trend_text = "🔴 Нисходящий"
+    elif higher_trend == "SIDEWAYS":
+        trend_text = "🟡 Боковой"
+    else:
+        trend_text = "Не применяется"
+
     result = (
         f"🤖 AI MARKET ANALYSIS\n\n"
         f"📊 Рынок: {market}\n"
@@ -415,6 +499,8 @@ def analyze(symbol, interval="1h"):
         f"EMA 20: {row['ema20']:.8g}\n"
         f"EMA 50: {row['ema50']:.8g}\n"
         f"MACD: {row['macd']:.8g}\n\n"
+        f"🔎 Старший ТФ: {higher_interval or '—'}\n"
+        f"📊 Тренд старшего ТФ: {trend_text}\n\n"
     )
 
     if stop is not None:
@@ -426,6 +512,7 @@ def analyze(symbol, interval="1h"):
     result += "⚠️ Аналитический сигнал, не гарантия прибыли."
 
     return result
+
 
 
 
