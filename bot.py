@@ -1176,6 +1176,26 @@ def analyze(symbol, interval="1h"):
         signal = "🟡 HOLD"
         stop = None
         target = None
+    # BACKTEST: сохраняем только торговые сигналы
+    if signal == "🟢 BUY":
+        save_backtest_trade(
+            symbol=symbol,
+            interval=interval,
+            direction="BUY",
+            entry_price=price,
+            stop_loss=stop,
+            take_profit=target
+        )
+
+    elif signal == "🔴 SELL":
+        save_backtest_trade(
+            symbol=symbol,
+            interval=interval,
+            direction="SELL",
+            entry_price=price,
+            stop_loss=stop,
+            take_profit=target
+        )
 
     if higher_trend == "UP":
         trend_text = "🟢 Восходящий"
