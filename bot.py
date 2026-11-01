@@ -501,6 +501,83 @@ def analyze_smc(df, swing=3):
     if df is None or len(df) < 2 * swing + 10:
         return result
 
+def analyze_liquidity(df, lookback=30, tolerance=0.001):
+    """
+    Advanced Liquidity Detection.
+    Detects BSL, SSL, Equal Highs/Lows and liquidity grabs.
+    Uses closed candles only.
+    """
+
+    result = {
+        "bsl": None,
+        "ssl": None,
+        "equal_highs": False,
+        "equal_lows": False,
+        "grab": "NONE",
+        "direction": "NEUTRAL"
+    }
+
+    if df is None or len(df) < lookback + 5:
+        return result
+
+    data = df.iloc[:-1].tail(lookback).copy()
+
+    highs = pd.to_numeric(data["high"], errors="coerce")
+    lows = pd.to_numeric(data["low"], errors="coerce")
+    closes = pd.to_numeric(data["close"], errors="coerce")
+
+    if highs.isna().any() or lows.isna().any() or closes.isna().any():
+        return result
+
+    current_high = float(highs.iloc[-1])
+    current_low = float(lows.iloc[-1])
+    current_close = float(closes.iloc[-1])
+
+    previous_highs = highs.iloc[:-1]
+    previous_lows = lows.iloc[:-1]
+
+    bsl = float(previous_highs.max())
+    ssl = float(previous_lows.min())
+
+    result["bsl"] = bsl
+    result["ssl"] = ssl
+
+    # Equal Highs / Equal Lows
+    equal_high_count = sum(
+        abs(float(x) - bsl) / max(abs(bsl), 1e-12) <= tolerance
+        for x in previous_highs
+    )
+
+    equal_low_count = sum(
+        abs(float(x) - ssl) / max(abs(ssl), 1e-12) <= tolerance
+        for x in previous_lows
+    )
+
+    result["equal_highs"] = equal_high_count >= 2
+    result["equal_lows"] = equal_low_count >= 2
+
+    # Liquidity Grab: wick breaks the level, close returns inside
+    bullish_grab = (
+        current_low < ssl
+        and current_close > ssl
+    )
+
+    bearish_grab = (
+        current_high > bsl
+        and current_close < bsl
+    )
+
+    if bullish_grab and not bearish_grab:
+        result["grab"] = "SSL"
+        result["direction"] = "BULLISH"
+
+    elif bearish_grab and not bullish_grab:
+        result["grab"] = "BSL"
+        result["direction"] = "BEARISH"
+
+    return result
+
+
     # Исключаем последнюю незакрытую свечу
     data = df.iloc[:-1].copy()
 
@@ -770,10 +847,10 @@ def analyze(symbol, interval="1h"):
     else:
         df["volume"] = 0
         df["volume_sma"] = 0
-
     row = df.iloc[-2]
-    smc = analyze_smc(df)
 
+    smc = analyze_smc(df)
+    liquidity = analyze_liquidity(df)
     volume_confirm = True
 
     if market != "FOREX":
