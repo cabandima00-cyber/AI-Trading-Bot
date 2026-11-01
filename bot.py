@@ -479,6 +479,11 @@ def analyze(symbol, interval="1h"):
 
     df["atr"] = tr.rolling(14).mean()
 
+    if "volume" in df.columns:
+    df["volume_sma"] = df["volume"].rolling(20).mean()
+else:
+    df["volume"] = 0
+    df["volume_sma"] = 0
     row = df.iloc[-2]
 
     price = row["close"]
