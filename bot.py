@@ -581,6 +581,7 @@ def analyze(symbol, interval="1h"):
         f"⏱ Таймфрейм: {interval}\n"
         f"💰 Цена: {price:.8g}\n\n"
         f"📊 Сигнал: {signal}\n"
+        f"💪 Сила сигнала: {strength}/100\n"
         f"📈 RSI: {rsi:.2f}\n"
         f"📊 ADX: {adx:.2f}\n"
         f"EMA 20: {row['ema20']:.8g}\n"
