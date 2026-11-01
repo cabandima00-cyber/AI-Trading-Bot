@@ -69,19 +69,55 @@ def get_otc_database_count():
 
 
 def load_otc_history():
+    OTC_TICKS.clear()
+
+    # Сначала загружаем историю из Supabase
+    if supabase is not None:
+        try:
+            offset = 0
+            total = 0
+
+            while True:
+                response = (
+                    supabase.table("otc_ticks")
+                    .select("symbol,timestamp,price")
+                    .order("timestamp")
+                    .range(offset, offset + 999)
+                    .execute()
+                )
+
+                rows = response.data or []
+
+                for row in rows:
+                    symbol = row["symbol"].upper()
+
+                    OTC_TICKS[symbol].append({
+                        "timestamp": int(row["timestamp"]),
+                        "price": float(row["price"])
+                    })
+
+                total += len(rows)
+
+                if len(rows) < 1000:
+                    break
+
+                offset += 1000
+
+            if total > 0:
+                print(f"Supabase history loaded: {total} ticks")
+                return
+
+        except Exception as error:
+            print("Supabase history loading error:", repr(error))
+
+    # Если облако недоступно или пустое — загружаем SQLite
     try:
         with sqlite3.connect("otc_history.db") as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("""
+            rows = conn.execute("""
                 SELECT symbol, timestamp, price
                 FROM otc_ticks
                 ORDER BY timestamp ASC
-            """)
-
-            rows = cursor.fetchall()
-
-        OTC_TICKS.clear()
+            """).fetchall()
 
         for symbol, timestamp, price in rows:
             OTC_TICKS[symbol].append({
@@ -89,10 +125,10 @@ def load_otc_history():
                 "price": price
             })
 
-        print(f"OTC history loaded: {len(rows)} ticks")
+        print(f"SQLite history loaded: {len(rows)} ticks")
 
     except sqlite3.Error as error:
-        print("OTC history loading error:", error)
+        print("SQLite history loading error:", error)
 
 def save_otc_tick(data):
     try:
