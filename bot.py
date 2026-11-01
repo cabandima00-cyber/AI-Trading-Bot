@@ -448,6 +448,39 @@ def supabase_worker():
         except Exception as error:
             print("Supabase worker error:", repr(error))
             time.sleep(5)
+
+def backtest_supabase_worker():
+    while True:
+        if supabase is None:
+            time.sleep(5)
+            continue
+
+        try:
+            trade = BACKTEST_SUPABASE_QUEUE.get(timeout=5)
+
+            while True:
+                try:
+                    supabase.table("backtest_trades").upsert(
+                        trade,
+                        on_conflict="id"
+                    ).execute()
+
+                    print("Supabase: backtest trade saved")
+                    break
+
+                except Exception as error:
+                    print("Backtest Supabase retry:", repr(error))
+                    time.sleep(10)
+
+            BACKTEST_SUPABASE_QUEUE.task_done()
+
+        except queue.Empty:
+            continue
+
+        except Exception as error:
+            print("Backtest Supabase worker error:", repr(error))
+            time.sleep(5)
+
 def run_otc_stream():
     import time
 
