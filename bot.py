@@ -35,6 +35,51 @@ def save_otc_tick(data):
 
     except (TypeError, ValueError, AttributeError):
         pass
+def run_otc_stream():
+    import time
+
+    sio = socketio.Client(reconnection=True)
+
+    @sio.on("graphic", namespace="/graphic")
+    def on_graphic(data):
+        if isinstance(data, dict):
+            save_otc_tick(data)
+
+    @sio.on("connect", namespace="/graphic")
+    def on_connect():
+        sio.emit(
+            "graphic",
+            {
+                "method": "SUBSCRIBE",
+                "symbol": "EUR/USD",
+                "interval": "1m",
+                "otc": True
+            },
+            namespace="/graphic"
+        )
+        print("BinoDex OTC stream connected!")
+
+    while True:
+        try:
+            if not sio.connected:
+                sio.connect(
+                    "https://api-coins.binodex.app",
+                    socketio_path="market",
+                    transports=["websocket"],
+                    namespaces=["/graphic"],
+                    wait_timeout=10
+                )
+
+            sio.wait()
+
+        except Exception as error:
+            print("BinoDex stream error:", error)
+
+        finally:
+            if sio.connected:
+                sio.disconnect()
+
+        time.sleep(5)
 def build_otc_candles(symbol, interval="1min"):
     seconds = OTC_TIMEFRAMES.get(interval)
 
