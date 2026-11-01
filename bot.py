@@ -1,3 +1,4 @@
+import sqlite3
 from collections import defaultdict, deque
 import socketio
 import threading
@@ -19,6 +20,24 @@ OTC_TIMEFRAMES = {
     "1week": 604800
 }
 
+def init_otc_database():
+    conn = sqlite3.connect("otc_history.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS otc_ticks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            price REAL NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+init_otc_database()
 def save_otc_tick(data):
     try:
         symbol = data.get("symbol", "").upper()
