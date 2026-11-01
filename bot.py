@@ -1,3 +1,4 @@
+import socketio
 import threading
 import os
 import re
@@ -407,6 +408,60 @@ def signal_command(message):
             f"{type(error).__name__}\n"
             f"{str(error)[:800]}"
         )
+@bot.message_handler(commands=["otctest"])
+def otc_test(message):
+    import time
+
+    bot.reply_to(message, "🔄 Проверяю подключение к BinoDex...")
+
+    sio = socketio.Client(reconnection=False)
+    ticks = []
+
+    @sio.on("graphic", namespace="/graphic")
+    def on_graphic(data):
+        if isinstance(data, dict):
+            ticks.append(data)
+
+    try:
+        sio.connect(
+            "https://api-coins.binodex.app",
+            socketio_path="market",
+            transports=["websocket"],
+            namespaces=["/graphic"],
+            wait_timeout=10
+        )
+
+        sio.emit(
+            "graphic",
+            {
+                "method": "SUBSCRIBE",
+                "symbol": "EUR/USD",
+                "interval": "1m",
+                "otc": True
+            },
+            namespace="/graphic"
+        )
+
+        time.sleep(8)
+        sio.disconnect()
+
+        if ticks:
+            last = ticks[-1]
+            bot.reply_to(
+                message,
+                f"✅ BinoDex подключён!\n"
+                f"Пара: {last.get('symbol')}\n"
+                f"Цена: {last.get('price')}\n"
+                f"Получено обновлений: {len(ticks)}"
+            )
+        else:
+            bot.reply_to(message, "⚠️ Подключение есть, но котировки не получены.")
+
+    except Exception as error:
+        if sio.connected:
+            sio.disconnect()
+
+        bot.reply_to(message, f"❌ Ошибка BinoDex: {error}")
 print("AI Market Signal Bot started!")
 
 threading.Thread(
