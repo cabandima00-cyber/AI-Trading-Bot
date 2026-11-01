@@ -253,43 +253,43 @@ def otc_markets(message):
     try:
         response = requests.get(
             "https://otcharts.com/v1/symbols",
-            headers={
-                "Authorization": f"Bearer {api_key}"
-            },
+            headers={"Authorization": f"Bearer {api_key}"},
             params={"venue": "binodex"},
             timeout=20
         )
 
-               if response.status_code != 200:
+        if response.status_code != 200:
             bot.reply_to(
                 message,
                 f"❌ OTCharts HTTP {response.status_code}\n"
                 f"{response.text[:500]}"
             )
             return
-        data = response.json()
 
+        data = response.json()
         symbols = data.get("symbols", [])
 
         if not symbols:
             bot.reply_to(message, "❌ OTC-пары не найдены.")
             return
 
-        text = "📊 BINODEX OTC ПАРЫ\n\n"
+        result = "📊 BINODEX OTC ПАРЫ\n\n"
 
         for item in symbols:
             if isinstance(item, dict):
                 name = item.get("symbol", "Неизвестно")
-                text += f"• {name}\n"
             else:
-                text += f"• {item}\n"
+                name = item
 
-        bot.reply_to(message, text[:4000])
+            result += f"• {name}\n"
+
+        bot.reply_to(message, result[:4000])
 
     except Exception as error:
+        print("OTC error:", repr(error))
         bot.reply_to(
             message,
-            f"❌ Ошибка получения OTC-пар: {type(error).__name__}"
+            f"❌ Ошибка OTC: {type(error).__name__}"
         )
 @bot.message_handler(commands=["start"])
 def start(message):
