@@ -757,6 +757,81 @@ def analyze_liquidity(df, lookback=30, tolerance=0.001):
         result["direction"] = result["structure"]
 
     return result
+def analyze_market_regime(df):
+    result = {
+        "regime": "UNKNOWN",
+        "trend": "NEUTRAL",
+        "volatility": "NORMAL",
+        "adx": 0.0,
+        "atr_percent": 0.0
+    }
+
+    if df is None or len(df) < 60:
+        return result
+
+    try:
+        data = df.iloc[:-1].copy()
+
+        high = pd.to_numeric(data["high"], errors="coerce")
+        low = pd.to_numeric(data["low"], errors="coerce")
+        close = pd.to_numeric(data["close"], errors="coerce")
+
+        if high.isna().any() or low.isna().any() or close.isna().any():
+            return result
+
+        adx_series = ADXIndicator(
+            high=high,
+            low=low,
+            close=close,
+            window=14
+        ).adx()
+
+        adx = float(adx_series.iloc[-1])
+
+        ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+        ema50 = float(close.ewm(span=50, adjust=False).mean().iloc[-1])
+
+        previous_close = close.shift(1)
+
+        tr = pd.concat([
+            high - low,
+            (high - previous_close).abs(),
+            (low - previous_close).abs()
+        ], axis=1).max(axis=1)
+
+        atr = tr.rolling(14).mean()
+
+        atr_percent = float(
+            (atr.iloc[-1] / close.iloc[-1]) * 100
+        )
+
+        atr_median = float(
+            (atr / close * 100).rolling(50).median().iloc[-1]
+        )
+
+        result["adx"] = round(adx, 2)
+        result["atr_percent"] = round(atr_percent, 4)
+
+        if atr_median > 0 and atr_percent > atr_median * 1.5:
+            result["volatility"] = "HIGH"
+            result["regime"] = "HIGH VOLATILITY"
+
+        elif adx >= 20 and ema20 > ema50:
+            result["trend"] = "BULLISH"
+            result["regime"] = "TRENDING UP"
+
+        elif adx >= 20 and ema20 < ema50:
+            result["trend"] = "BEARISH"
+            result["regime"] = "TRENDING DOWN"
+
+        else:
+            result["regime"] = "RANGING"
+
+        return result
+
+    except Exception as e:
+        print("Market Regime Error:", e)
+        return result
 
 def analyze(symbol, interval="1h"):
     is_otc = symbol.upper().startswith("OTC:")
