@@ -215,6 +215,7 @@ def get_forex_data(symbol, interval="1h"):
 
     forex_symbol = symbol[:3] + "/" + symbol[3:]
 
+    time.sleep(8)
     response = requests.get(
         TWELVE_API,
         params={
