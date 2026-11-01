@@ -156,6 +156,7 @@ def run_otc_stream():
                 sio.disconnect()
 
         time.sleep(5)
+
 def build_otc_candles(symbol, interval="1min"):
     seconds = OTC_TIMEFRAMES.get(interval)
 
@@ -173,11 +174,11 @@ def build_otc_candles(symbol, interval="1min"):
         df["timestamp"], unit="ms", utc=True
     )
 
-   df["candle_time"] = pd.to_datetime(
-    (df["timestamp"] // (seconds * 1000)) * (seconds * 1000),
-    unit="ms",
-    utc=True
-)
+    df["candle_time"] = pd.to_datetime(
+        (df["timestamp"] // (seconds * 1000)) * (seconds * 1000),
+        unit="ms",
+        utc=True
+    )
 
     candles = df.groupby("candle_time").agg(
         open=("price", "first"),
@@ -190,6 +191,7 @@ def build_otc_candles(symbol, interval="1min"):
     candles.rename(columns={"candle_time": "time"}, inplace=True)
 
     return candles
+
 OTC_TICKS = defaultdict(lambda: deque(maxlen=50000))
 
 from ta.momentum import RSIIndicator
