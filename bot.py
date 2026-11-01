@@ -4,6 +4,9 @@ from collections import defaultdict, deque
 import socketio
 import threading
 import os
+import queue
+
+SUPABASE_QUEUE = queue.Queue(maxsize=50000)
 import re
 import requests
 import telebot
