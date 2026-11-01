@@ -19,6 +19,22 @@ OTC_TIMEFRAMES = {
     "1week": 604800
 }
 
+def save_otc_tick(data):
+    try:
+        symbol = data.get("symbol", "").upper()
+        price = float(data.get("price"))
+        timestamp = int(data.get("timestamp"))
+
+        if not symbol or price <= 0:
+            return
+
+        OTC_TICKS[symbol].append({
+            "timestamp": timestamp,
+            "price": price
+        })
+
+    except (TypeError, ValueError, AttributeError):
+        pass
 OTC_TICKS = defaultdict(lambda: deque(maxlen=50000))
 
 from ta.momentum import RSIIndicator
