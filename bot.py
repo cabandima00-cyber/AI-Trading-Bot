@@ -528,7 +528,6 @@ def analyze(symbol, interval="1h"):
     )
 
     if buy_conditions:
-
         signal = "🟢 BUY"
         stop = price - atr * 1.5
         target = price + atr * 3
