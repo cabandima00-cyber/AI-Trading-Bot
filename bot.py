@@ -1035,7 +1035,7 @@ print("ПРОВЕРКА: bot.py дошёл до загрузки OTC!", flush=Tr
 load_otc_history()
 print("Проверка: загрузка OTC истории завершена.")
 
-print("AI Market Signal Bot started!")
+print("AI Market Signal Bot started!", flush=True)
 
 threading.Thread(
     target=supabase_worker,
