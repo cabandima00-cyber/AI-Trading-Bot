@@ -197,23 +197,31 @@ def analyze(symbol, interval="1h"):
 
        df = build_otc_candles(symbol, interval)
 
-if len(df) < 60:
-    return "⏳ Пока недостаточно OTC-свечей. Нужно минимум 60."
-        market = "BINODEX OTC"
+if is_otc:
+    symbol = symbol[4:].strip().upper()
 
+    if not re.fullmatch(r"[A-Z0-9#/_-]{3,30}", symbol):
+        return "❌ Неверный формат OTC-пары."
+
+    df = build_otc_candles(symbol, interval)
+
+    if len(df) < 60:
+        return "⏳ Пока недостаточно OTC-свечей. Нужно минимум 60."
+
+    market = "BINODEX OTC"
+
+else:
+    symbol = symbol.upper().replace("/", "")
+
+    if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
+        return "❌ Неверный формат пары."
+
+    if symbol in FOREX_PAIRS:
+        df = get_forex_data(symbol, interval)
+        market = "FOREX"
     else:
-        symbol = symbol.upper().replace("/", "")
-
-        if not re.fullmatch(r"[A-Z0-9]{5,20}", symbol):
-            return "❌ Неверный формат пары."
-
-        if symbol in FOREX_PAIRS:
-            df = get_forex_data(symbol, interval)
-            market = "FOREX"
-        else:
-            df = get_crypto_data(symbol, interval)
-            market = "CRYPTO"
-
+        df = get_crypto_data(symbol, interval)
+        market = "CRYPTO"
     close = df["close"]
 
     df["ema20"] = close.ewm(span=20, adjust=False).mean()
