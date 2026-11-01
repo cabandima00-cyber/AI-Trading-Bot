@@ -36,39 +36,25 @@ def get_forex_data(symbol, interval="1h"):
         TWELVE_API,
         params={
             "symbol": forex_symbol,
-           "interval": interval,
+            "interval": interval,
             "outputsize": 200,
             "apikey": TWELVE_API_KEY
         },
         timeout=20
     )
 
-        if response.status_code != 200:
-            bot.reply_to(
-                message,
-                f"❌ OTCharts HTTP {response.status_code}\n"
-                f"{response.text[:500]}"
-            )
-            return
+    response.raise_for_status()
+    data = response.json()
 
-        data = response.json()
+    if "values" not in data:
+        raise ValueError(f"Ошибка Twelve Data: {data}")
 
-    if data.get("status") == "error":
-        raise ValueError(data.get("message", "Ошибка Twelve Data"))
-
-    values = data.get("values")
-
-    if not values or len(values) < 60:
-        raise ValueError("Недостаточно данных Forex")
-
-    df = pd.DataFrame(values)
-
-    df["datetime"] = pd.to_datetime(df["datetime"])
+    df = pd.DataFrame(data["values"])
 
     for col in ["open", "high", "low", "close"]:
         df[col] = pd.to_numeric(df[col])
 
-    df = df.sort_values("datetime").reset_index(drop=True)
+    df = df.iloc[::-1].reset_index(drop=True)
 
     return df
 
