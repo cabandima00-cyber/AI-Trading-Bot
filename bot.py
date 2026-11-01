@@ -527,7 +527,7 @@ def analyze(symbol, interval="1h"):
         and volume_confirm
     )
 
-       strength = 0
+    strength = 0
 
     if price > row["ema20"] > row["ema50"] or price < row["ema20"] < row["ema50"]:
         strength += 20
