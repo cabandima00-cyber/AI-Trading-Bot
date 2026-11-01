@@ -679,6 +679,7 @@ def analyze_liquidity(df, lookback=30, tolerance=0.001):
     return result
 
 
+   def analyze_smc(df, swing=3):
     # Исключаем последнюю незакрытую свечу
     data = df.iloc[:-1].copy()
 
