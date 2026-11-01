@@ -485,6 +485,18 @@ else:
     df["volume"] = 0
     df["volume_sma"] = 0
     row = df.iloc[-2]
+    volume_confirm = True
+
+if market != "FOREX" and "volume_sma" in df.columns:
+    current_volume = row["volume"]
+    average_volume = row["volume_sma"]
+
+    volume_confirm = (
+        pd.notna(current_volume)
+        and pd.notna(average_volume)
+        and average_volume > 0
+        and current_volume > average_volume
+    )
 
     price = row["close"]
     rsi = row["rsi"]
