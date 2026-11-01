@@ -103,6 +103,12 @@ def save_otc_tick(data):
         if not symbol or price <= 0:
             return
 
+        tick = {
+            "symbol": symbol,
+            "timestamp": timestamp,
+            "price": price
+        }
+
         OTC_TICKS[symbol].append({
             "timestamp": timestamp,
             "price": price
@@ -116,6 +122,12 @@ def save_otc_tick(data):
                 """,
                 (symbol, timestamp, price)
             )
+
+        if supabase is not None:
+            try:
+                SUPABASE_QUEUE.put_nowait(tick)
+            except queue.Full:
+                print("Supabase queue is full!")
 
     except (TypeError, ValueError, AttributeError) as error:
         print("OTC tick error:", error)
