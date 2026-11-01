@@ -1789,6 +1789,7 @@ def otc_database_status(message):
         )
 
 
+
 print("ПРОВЕРКА: bot.py дошёл до загрузки OTC!", flush=True)
 load_otc_history()
 print("Проверка: загрузка OTC истории завершена.")
@@ -1799,6 +1800,14 @@ threading.Thread(
     target=supabase_worker,
     daemon=True
 ).start()
+
+threading.Thread(
+    target=backtest_supabase_worker,
+    daemon=True
+).start()
+
+print("Backtest Supabase worker started!", flush=True)
+
 threading.Thread(
     target=run_otc_stream,
     daemon=True
@@ -1810,6 +1819,7 @@ threading.Thread(
     target=automatic_scanner,
     daemon=True
 ).start()
+
 
 
 @bot.message_handler(commands=["otctimeframe"])
