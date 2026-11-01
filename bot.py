@@ -679,35 +679,6 @@ def analyze_liquidity(df, lookback=30, tolerance=0.001):
     return result
 
 
-   def analyze_smc(df, swing=3):
-    # Исключаем последнюю незакрытую свечу
-    data = df.iloc[:-1].copy()
-
-    highs = pd.to_numeric(data["high"], errors="coerce").tolist()
-    lows = pd.to_numeric(data["low"], errors="coerce").tolist()
-    closes = pd.to_numeric(data["close"], errors="coerce").tolist()
-
-    if any(pd.isna(x) for x in highs + lows + closes):
-        return result
-
-    high_pivots = []
-    low_pivots = []
-
-    # Находим подтверждённые Swing High / Swing Low
-    for i in range(swing, len(data) - swing):
-
-        high_window = highs[i-swing:i+swing+1]
-        low_window = lows[i-swing:i+swing+1]
-
-        if highs[i] == max(high_window):
-            high_pivots.append((i, highs[i]))
-
-        if lows[i] == min(low_window):
-            low_pivots.append((i, lows[i]))
-
-    if len(high_pivots) < 2 or len(low_pivots) < 2:
-        return result
-
     previous_high = high_pivots[-2][1]
     latest_high = high_pivots[-1][1]
 
