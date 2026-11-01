@@ -772,6 +772,7 @@ def analyze(symbol, interval="1h"):
         df["volume_sma"] = 0
 
     row = df.iloc[-2]
+    smc = analyze_smc(df)
 
     volume_confirm = True
 
@@ -801,6 +802,7 @@ def analyze(symbol, interval="1h"):
         and adx >= 20
         and higher_trend in ("UP", "NOT_USED")
         and volume_confirm
+        and smc["direction"] == "BULLISH"
     )
 
     sell_conditions = (
@@ -810,6 +812,7 @@ def analyze(symbol, interval="1h"):
         and adx >= 20
         and higher_trend in ("DOWN", "NOT_USED")
         and volume_confirm
+        and smc["direction"] == "BEARISH"
     )
 
     strength = 0
