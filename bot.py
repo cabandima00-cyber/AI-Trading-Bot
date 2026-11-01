@@ -698,6 +698,7 @@ def otc_database_status(message):
         )
 
 
+load_otc_history()
 
 print("AI Market Signal Bot started!")
 threading.Thread(
