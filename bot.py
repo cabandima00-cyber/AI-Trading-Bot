@@ -582,6 +582,10 @@ def otc_test(message):
 
 
 print("AI Market Signal Bot started!")
+threading.Thread(
+    target=run_otc_stream,
+    daemon=True
+).start()
 
 threading.Thread(
     target=automatic_scanner,
