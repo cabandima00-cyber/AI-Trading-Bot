@@ -111,7 +111,17 @@ def run_otc_stream():
         "GBP/USD",
         "AUD/USD",
         "USD/JPY",
-        "EUR/JPY"
+        "EUR/JPY",
+        "EUR/GBP",
+        "GBP/JPY",
+        "AUD/JPY",
+        "USD/CAD",
+        "USD/CHF",
+        "NZD/USD",
+        "EUR/AUD",
+        "GBP/AUD",
+        "EUR/CHF",
+        "GBP/CHF"
     ]
 
     @sio.on("graphic", namespace="/graphic")
