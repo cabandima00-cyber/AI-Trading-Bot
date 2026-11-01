@@ -588,6 +588,32 @@ def otc_test(message):
             sio.disconnect()
 
         bot.reply_to(message, f"❌ Ошибка BinoDex: {error}")
+@bot.message_handler(commands=["otcpairs"])
+def otc_pairs_status(message):
+    pairs = [
+        "EUR/USD-OTC",
+        "GBP/USD-OTC",
+        "AUD/USD-OTC",
+        "USD/JPY-OTC",
+        "EUR/JPY-OTC"
+    ]
+
+    result = "📊 КОТИРОВКИ BINODEX OTC\n\n"
+
+    for pair in pairs:
+        ticks = OTC_TICKS.get(pair, [])
+
+        if ticks:
+            last = ticks[-1]
+            result += (
+                f"✅ {pair}\n"
+                f"Цена: {last['price']}\n"
+                f"Тиков: {len(ticks)}\n\n"
+            )
+        else:
+            result += f"⏳ {pair} — котировок пока нет\n\n"
+
+    bot.reply_to(message, result)
 
 
 
