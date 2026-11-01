@@ -118,6 +118,7 @@ def init_otc_database():
 init_otc_database()
 
 
+
 def init_backtest_db():
     try:
         with sqlite3.connect("backtest.db") as conn:
@@ -134,9 +135,25 @@ def init_backtest_db():
                     result TEXT DEFAULT 'PENDING',
                     profit_percent REAL DEFAULT 0,
                     created_at INTEGER NOT NULL,
-                    closed_at INTEGER
+                    closed_at INTEGER,
+                    candle_time INTEGER
                 )
             """)
+
+            # Проверяем существующие столбцы
+            columns = [
+                row[1]
+                for row in conn.execute(
+                    "PRAGMA table_info(backtest_trades)"
+                ).fetchall()
+            ]
+
+            # Добавляем candle_time в старую таблицу
+            if "candle_time" not in columns:
+                conn.execute("""
+                    ALTER TABLE backtest_trades
+                    ADD COLUMN candle_time INTEGER
+                """)
 
             conn.commit()
 
@@ -147,6 +164,7 @@ def init_backtest_db():
 
 
 init_backtest_db()
+
 def save_backtest_trade(
     symbol,
     interval,
