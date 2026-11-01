@@ -999,6 +999,7 @@ def analyze(symbol, interval="1h"):
 
     smc = analyze_smc(df)
     liquidity = analyze_liquidity(df)
+    regime = analyze_market_regime(df)
     volume_confirm = True
 
     if market != "FOREX":
