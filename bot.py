@@ -173,7 +173,11 @@ def build_otc_candles(symbol, interval="1min"):
         df["timestamp"], unit="ms", utc=True
     )
 
-    df["candle_time"] = df["time"].dt.floor(f"{seconds}s")
+   df["candle_time"] = pd.to_datetime(
+    (df["timestamp"] // (seconds * 1000)) * (seconds * 1000),
+    unit="ms",
+    utc=True
+)
 
     candles = df.groupby("candle_time").agg(
         open=("price", "first"),
