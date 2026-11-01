@@ -1051,7 +1051,7 @@ def analyze(symbol, interval="1h"):
         f"📈 RSI: {rsi:.2f}\n"
         f"📊 ADX: {adx:.2f}\n"
         f"\n🧠 SMC ANALYSIS\n"
-         f"Структура: {smc['structure']}\n"
+        f"Структура: {smc['structure']}\n"
         f"BOS: {smc['bos']}\n"
         f"CHOCH: {smc['choch']}\n"
         f"Liquidity Sweep: {smc['sweep']}\n"
@@ -1068,7 +1068,8 @@ def analyze(symbol, interval="1h"):
         f"MACD: {row['macd']:.8g}\n\n"
         f"🔎 Старший ТФ: {higher_interval or '—'}\n"
         f"📊 Тренд старшего ТФ: {trend_text}\n\n"
-
+        f"⚠️ Аналитический сигнал, не гарантия прибыли."
+    )
     if stop is not None:
         result += (
             f"🛑 Stop Loss: {stop:.8g}\n"
