@@ -3,3 +3,4 @@ requests
 pandas
 numpy
 ta
+python-socketio[client]
