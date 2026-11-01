@@ -68,6 +68,95 @@ def init_otc_database():
 
 
 init_otc_database()
+def init_otc_database():
+    conn = sqlite3.connect("otc_history.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS otc_ticks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            price REAL NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+init_otc_database()
+
+
+def init_backtest_db():
+    try:
+        with sqlite3.connect("backtest.db") as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS backtest_trades (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    symbol TEXT NOT NULL,
+                    interval TEXT NOT NULL,
+                    direction TEXT NOT NULL,
+                    entry_price REAL NOT NULL,
+                    exit_price REAL,
+                    stop_loss REAL,
+                    take_profit REAL,
+                    result TEXT DEFAULT 'PENDING',
+                    profit_percent REAL DEFAULT 0,
+                    created_at INTEGER NOT NULL,
+                    closed_at INTEGER
+                )
+            """)
+
+            conn.commit()
+
+        print("Backtesting database initialized")
+
+    except Exception as e:
+        print("Backtesting DB Error:", e)
+
+
+init_backtest_db()
+def save_backtest_trade(
+    symbol,
+    interval,
+    direction,
+    entry_price,
+    stop_loss=None,
+    take_profit=None
+):
+    try:
+        import time
+
+        with sqlite3.connect("backtest.db") as conn:
+            conn.execute("""
+                INSERT INTO backtest_trades (
+                    symbol,
+                    interval,
+                    direction,
+                    entry_price,
+                    stop_loss,
+                    take_profit,
+                    result,
+                    profit_percent,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?)
+            """, (
+                symbol,
+                interval,
+                direction,
+                float(entry_price),
+                float(stop_loss) if stop_loss is not None else None,
+                float(take_profit) if take_profit is not None else None,
+                int(time.time())
+            ))
+
+        return True
+
+    except Exception as e:
+        print("Backtest Save Error:", e)
+        return False
 
 def get_otc_database_count():
     with sqlite3.connect("otc_history.db") as conn:
