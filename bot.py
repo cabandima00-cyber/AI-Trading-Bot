@@ -1321,6 +1321,13 @@ def analyze(symbol, interval="1h"):
         target = None
 
 
+
+    # BACKTEST: проверяем закрытие открытых сделок
+    update_backtest_trades(
+        symbol=f"{market}:{symbol}",
+        current_price=price
+    )
+
     # BACKTEST: сохраняем только торговые сигналы
     if signal == "🟢 BUY" and candle_time is not None:
         save_backtest_trade(
