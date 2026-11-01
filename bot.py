@@ -481,6 +481,133 @@ def get_crypto_data(symbol, interval="1h"):
         df[col] = pd.to_numeric(df[col])
 
     return df
+
+def analyze_smc(df, swing=3):
+    """
+    SMC structure analysis.
+    Uses closed candles only.
+    """
+
+    result = {
+        "structure": "NEUTRAL",
+        "bos": "NONE",
+        "choch": "NONE",
+        "sweep": "NONE",
+        "direction": "NEUTRAL",
+        "high_level": None,
+        "low_level": None
+    }
+
+    if df is None or len(df) < 2 * swing + 10:
+        return result
+
+    # Исключаем последнюю незакрытую свечу
+    data = df.iloc[:-1].copy()
+
+    highs = pd.to_numeric(data["high"], errors="coerce").tolist()
+    lows = pd.to_numeric(data["low"], errors="coerce").tolist()
+    closes = pd.to_numeric(data["close"], errors="coerce").tolist()
+
+    if any(pd.isna(x) for x in highs + lows + closes):
+        return result
+
+    high_pivots = []
+    low_pivots = []
+
+    # Находим подтверждённые Swing High / Swing Low
+    for i in range(swing, len(data) - swing):
+
+        high_window = highs[i-swing:i+swing+1]
+        low_window = lows[i-swing:i+swing+1]
+
+        if highs[i] == max(high_window):
+            high_pivots.append((i, highs[i]))
+
+        if lows[i] == min(low_window):
+            low_pivots.append((i, lows[i]))
+
+    if len(high_pivots) < 2 or len(low_pivots) < 2:
+        return result
+
+    previous_high = high_pivots[-2][1]
+    latest_high = high_pivots[-1][1]
+
+    previous_low = low_pivots[-2][1]
+    latest_low = low_pivots[-1][1]
+
+    result["high_level"] = latest_high
+    result["low_level"] = latest_low
+
+    # Определяем структуру рынка
+    if latest_high > previous_high and latest_low > previous_low:
+        result["structure"] = "BULLISH"
+
+    elif latest_high < previous_high and latest_low < previous_low:
+        result["structure"] = "BEARISH"
+
+    # Последние две закрытые свечи
+    previous_close = closes[-2]
+    current_close = closes[-1]
+
+    current_high = highs[-1]
+    current_low = lows[-1]
+
+    # Пробой структуры
+    bullish_break = (
+        previous_close <= latest_high
+        and current_close > latest_high
+    )
+
+    bearish_break = (
+        previous_close >= latest_low
+        and current_close < latest_low
+    )
+
+    if bullish_break:
+        result["bos"] = "BULLISH"
+
+    elif bearish_break:
+        result["bos"] = "BEARISH"
+
+    # CHOCH — пробой против предыдущей структуры
+    if result["structure"] == "BEARISH" and bullish_break:
+        result["choch"] = "BULLISH"
+
+    elif result["structure"] == "BULLISH" and bearish_break:
+        result["choch"] = "BEARISH"
+
+    # Снятие ликвидности
+    bullish_sweep = (
+        current_low < latest_low
+        and current_close > latest_low
+    )
+
+    bearish_sweep = (
+        current_high > latest_high
+        and current_close < latest_high
+    )
+
+    if bullish_sweep:
+        result["sweep"] = "BULLISH"
+
+    elif bearish_sweep:
+        result["sweep"] = "BEARISH"
+
+    # Итоговое направление SMC
+    if result["choch"] != "NONE":
+        result["direction"] = result["choch"]
+
+    elif result["bos"] != "NONE":
+        result["direction"] = result["bos"]
+
+    elif result["sweep"] != "NONE":
+        result["direction"] = result["sweep"]
+
+    else:
+        result["direction"] = result["structure"]
+
+    return result
+
 def analyze(symbol, interval="1h"):
     is_otc = symbol.upper().startswith("OTC:")
 
