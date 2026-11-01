@@ -43,7 +43,13 @@ def get_forex_data(symbol, interval="1h"):
         timeout=20
     )
 
-    response.raise_for_status()
+    if response.status_code != 200:
+    bot.reply_to(
+        message,
+        f"❌ OTCharts HTTP {response.status_code}\n"
+        f"{response.text[:500]}"
+    )
+    return
     data = response.json()
 
     if data.get("status") == "error":
