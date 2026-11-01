@@ -8,6 +8,24 @@ import re
 import requests
 import telebot
 import pandas as pd
+from supabase import create_client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
+
+supabase = None
+
+try:
+    if SUPABASE_URL and SUPABASE_SECRET_KEY:
+        supabase = create_client(
+            SUPABASE_URL,
+            SUPABASE_SECRET_KEY
+        )
+        print("Supabase connected successfully!")
+    else:
+        print("Supabase credentials not found!")
+
+except Exception as error:
+    print("Supabase connection error:", error)
 OTC_TIMEFRAMES = {
     "15sec": 15,
     "30sec": 30,
