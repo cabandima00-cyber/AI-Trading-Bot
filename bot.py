@@ -449,9 +449,10 @@ def otc_test(message):
     ticks = []
 
     @sio.on("graphic", namespace="/graphic")
-    def on_graphic(data):
-        if isinstance(data, dict):
-            ticks.append(data)
+   def on_graphic(data):
+    if isinstance(data, dict):
+        ticks.append(data)
+        save_otc_tick(data)
 
     try:
         sio.connect(
