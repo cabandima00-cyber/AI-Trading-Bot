@@ -381,7 +381,7 @@ def analyze(symbol, interval="1h"):
             df = get_crypto_data(symbol, interval)
             market = "CRYPTO"
 
- if len(df) < 60:
+    if len(df) < 60:
     current = len(df)
     missing = 60 - current
 
