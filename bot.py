@@ -885,7 +885,9 @@ def otc_database_status(message):
         )
 
 
+print("Проверка: запускаю загрузку OTC истории...")
 load_otc_history()
+print("Проверка: загрузка OTC истории завершена.")
 
 print("AI Market Signal Bot started!")
 threading.Thread(
