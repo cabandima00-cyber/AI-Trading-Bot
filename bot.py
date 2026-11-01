@@ -24,30 +24,30 @@ print("Supabase URL configured:", bool(SUPABASE_URL), flush=True)
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
 def get_candle_timestamp(row):
     try:
-        # Binance
-        if "close_time" in row.index:
-            value = row["close_time"]
-
-            if pd.notna(value):
-                return int(value) // 1000
-
-        # Twelve Data
-        if "datetime" in row.index:
-            value = pd.to_datetime(
-                row["datetime"],
-                utc=True
-            )
-            return int(value.timestamp())
-
-        # BinoDex OTC
+        # Binance и BinoDex OTC
         if "time" in row.index:
-            value = pd.to_datetime(
-                row["time"],
-                utc=True
-            )
-            return int(value.timestamp())
+            value = row["time"]
 
-        return None
+        # Twelve Data Forex
+        elif "datetime" in row.index:
+            value = row["datetime"]
+
+        else:
+            return None
+
+        if pd.isna(value):
+            return None
+
+        # Unix timestamp в миллисекундах
+        if isinstance(value, (int, float)):
+            return int(value) // 1000
+
+        timestamp = pd.to_datetime(
+            value,
+            utc=True
+        )
+
+        return int(timestamp.timestamp())
 
     except Exception as e:
         print("Candle timestamp error:", e)
