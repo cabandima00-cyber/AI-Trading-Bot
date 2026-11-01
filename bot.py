@@ -659,6 +659,22 @@ def otc_pairs_status(message):
             result += f"⏳ {pair} — котировок пока нет\n\n"
 
     bot.reply_to(message, result)
+@bot.message_handler(commands=["otcdb"])
+def otc_database_status(message):
+    try:
+        count = get_otc_database_count()
+
+        bot.reply_to(
+            message,
+            f"🗄 БАЗА BINODEX OTC\n\n"
+            f"📊 Всего сохранено тиков: {count}"
+        )
+
+    except Exception as error:
+        bot.reply_to(
+            message,
+            f"❌ Ошибка базы данных: {error}"
+        )
 
 
 
