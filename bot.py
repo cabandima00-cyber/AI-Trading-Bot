@@ -436,6 +436,16 @@ def analyze(symbol, interval="1h"):
                     f"Нужно минимум 60."
                 )
 
+        if len(higher_df) < 60:
+            if is_otc:
+                higher_trend = "NOT_USED"
+            else:
+                return (
+                    f"⏳ Недостаточно свечей старшего "
+                    f"таймфрейма {higher_interval}.\n"
+                    f"Нужно минимум 60."
+                )
+
         else:
             higher_close = higher_df["close"]
 
@@ -443,23 +453,23 @@ def analyze(symbol, interval="1h"):
                 span=20, adjust=False
             ).mean()
 
+            higher_ema50 = higher_close.ewm(
+                span=50, adjust=False
+            ).mean()
 
-        higher_ema50 = higher_close.ewm(
-            span=50, adjust=False
-        ).mean()
+            h_price = higher_close.iloc[-2]
+            h_ema20 = higher_ema20.iloc[-2]
+            h_ema50 = higher_ema50.iloc[-2]
 
-        h_price = higher_close.iloc[-2]
-        h_ema20 = higher_ema20.iloc[-2]
-        h_ema50 = higher_ema50.iloc[-2]
+            if h_price > h_ema20 > h_ema50:
+                higher_trend = "UP"
 
-        if h_price > h_ema20 > h_ema50:
-            higher_trend = "UP"
+            elif h_price < h_ema20 < h_ema50:
+                higher_trend = "DOWN"
 
-        elif h_price < h_ema20 < h_ema50:
-            higher_trend = "DOWN"
+            else:
+                higher_trend = "SIDEWAYS"
 
-        else:
-            higher_trend = "SIDEWAYS"
 
     # Основные индикаторы
     close = df["close"]
