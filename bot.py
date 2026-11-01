@@ -482,6 +482,7 @@ def get_crypto_data(symbol, interval="1h"):
 
     return df
 
+
 def analyze_smc(df, swing=3):
     """
     SMC structure analysis.
@@ -500,6 +501,106 @@ def analyze_smc(df, swing=3):
 
     if df is None or len(df) < 2 * swing + 10:
         return result
+
+    data = df.iloc[:-1].copy()
+
+    highs = pd.to_numeric(data["high"], errors="coerce")
+    lows = pd.to_numeric(data["low"], errors="coerce")
+    closes = pd.to_numeric(data["close"], errors="coerce")
+
+    if highs.isna().any() or lows.isna().any() or closes.isna().any():
+        return result
+
+    high_pivots = []
+    low_pivots = []
+
+    for i in range(swing, len(data) - swing):
+
+        high_window = highs.iloc[i-swing:i+swing+1]
+        low_window = lows.iloc[i-swing:i+swing+1]
+
+        if highs.iloc[i] == high_window.max():
+            high_pivots.append((i, float(highs.iloc[i])))
+
+        if lows.iloc[i] == low_window.min():
+            low_pivots.append((i, float(lows.iloc[i])))
+
+    if len(high_pivots) < 2 or len(low_pivots) < 2:
+        return result
+
+    previous_high = high_pivots[-2][1]
+    latest_high = high_pivots[-1][1]
+
+    previous_low = low_pivots[-2][1]
+    latest_low = low_pivots[-1][1]
+
+    result["high_level"] = latest_high
+    result["low_level"] = latest_low
+
+    if latest_high > previous_high and latest_low > previous_low:
+        result["structure"] = "BULLISH"
+
+    elif latest_high < previous_high and latest_low < previous_low:
+        result["structure"] = "BEARISH"
+
+    previous_close = float(closes.iloc[-2])
+    current_close = float(closes.iloc[-1])
+
+    current_high = float(highs.iloc[-1])
+    current_low = float(lows.iloc[-1])
+
+    bullish_break = (
+        previous_close <= latest_high
+        and current_close > latest_high
+    )
+
+    bearish_break = (
+        previous_close >= latest_low
+        and current_close < latest_low
+    )
+
+    if bullish_break:
+        result["bos"] = "BULLISH"
+
+    elif bearish_break:
+        result["bos"] = "BEARISH"
+
+    if result["structure"] == "BEARISH" and bullish_break:
+        result["choch"] = "BULLISH"
+
+    elif result["structure"] == "BULLISH" and bearish_break:
+        result["choch"] = "BEARISH"
+
+    bullish_sweep = (
+        current_low < latest_low
+        and current_close > latest_low
+    )
+
+    bearish_sweep = (
+        current_high > latest_high
+        and current_close < latest_high
+    )
+
+    if bullish_sweep:
+        result["sweep"] = "BULLISH"
+
+    elif bearish_sweep:
+        result["sweep"] = "BEARISH"
+
+    if result["choch"] != "NONE":
+        result["direction"] = result["choch"]
+
+    elif result["bos"] != "NONE":
+        result["direction"] = result["bos"]
+
+    elif result["sweep"] != "NONE":
+        result["direction"] = result["sweep"]
+
+    else:
+        result["direction"] = result["structure"]
+
+    return result
+
 
 def analyze_liquidity(df, lookback=30, tolerance=0.001):
     """
