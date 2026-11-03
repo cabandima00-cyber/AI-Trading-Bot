@@ -1825,21 +1825,7 @@ threading.Thread(
 ).start()
 
 print("Backtest Supabase worker started!", flush=True)
-# ВРЕМЕННЫЙ ТЕСТ записи Backtest в Supabase
-BACKTEST_SUPABASE_QUEUE.put({
-    "symbol": "TEST:SUPABASE",
-    "interval": "test",
-    "direction": "TEST",
-    "entry_price": 1.0,
-    "stop_loss": None,
-    "take_profit": None,
-    "result": "TEST",
-    "profit_percent": 0.0,
-    "created_at": int(time.time()),
-    "candle_time": 0
-})
 
-print("Backtest test record queued!", flush=True)
 
 threading.Thread(
     target=run_otc_stream,
