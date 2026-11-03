@@ -363,49 +363,66 @@ def get_otc_database_count():
         return cursor.fetchone()[0]
 
 
+
 def load_otc_history():
     OTC_TICKS.clear()
 
-    # Сначала загружаем историю из Supabase
+    # Загружаем только последние 20 000 OTC-тиков
     if supabase is not None:
         try:
             offset = 0
-            total = 0
+            max_ticks = 20000
+            all_rows = []
 
-            while True:
+            while offset < max_ticks:
+                end = min(offset + 999, max_ticks - 1)
+
                 response = (
                     supabase.schema("public").table("otc_ticks")
                     .select("symbol,timestamp,price")
-                    .order("timestamp")
-                    .range(offset, offset + 999)
+                    .order("timestamp", desc=True)
+                    .range(offset, end)
                     .execute()
                 )
 
                 rows = response.data or []
 
-                for row in rows:
-                    symbol = row["symbol"].upper()
+                if not rows:
+                    break
 
-                    OTC_TICKS[symbol].append({
-                        "timestamp": int(row["timestamp"]),
-                        "price": float(row["price"])
-                    })
-
-                total += len(rows)
+                all_rows.extend(rows)
+                offset += len(rows)
 
                 if len(rows) < 1000:
                     break
 
-                offset += 1000
+            # Переворачиваем: сначала старые, затем новые
+            all_rows.reverse()
 
-            if total > 0:
-                print(f"Supabase history loaded: {total} ticks")
+            for row in all_rows:
+                symbol = row["symbol"].upper()
+
+                OTC_TICKS[symbol].append({
+                    "timestamp": int(row["timestamp"]),
+                    "price": float(row["price"])
+                })
+
+            if all_rows:
+                print(
+                    f"Supabase history loaded: "
+                    f"{len(all_rows)} recent ticks",
+                    flush=True
+                )
                 return
 
         except Exception as error:
-            print("Supabase history loading error:", repr(error))
+            print(
+                "Supabase history loading error:",
+                repr(error),
+                flush=True
+            )
 
-    # Если облако недоступно или пустое — загружаем SQLite
+    # Резервная загрузка из SQLite
     try:
         with sqlite3.connect("otc_history.db") as conn:
             rows = conn.execute("""
@@ -420,10 +437,11 @@ def load_otc_history():
                 "price": price
             })
 
-        print(f"SQLite history loaded: {len(rows)} ticks")
+        print(f"SQLite history loaded: {len(rows)} ticks", flush=True)
 
     except sqlite3.Error as error:
-        print("SQLite history loading error:", error)
+        print("SQLite history loading error:", error, flush=True)
+
 
 def save_otc_tick(data):
     try:
