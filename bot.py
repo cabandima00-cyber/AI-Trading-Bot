@@ -176,6 +176,9 @@ def save_backtest_trade(
     stop_loss=None,
     take_profit=None
 ):
+    if direction not in ("BUY", "SELL"):
+        print("Backtest skipped: invalid direction", direction)
+        return False
     try:
         import time
 
