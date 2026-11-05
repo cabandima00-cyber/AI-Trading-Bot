@@ -1371,24 +1371,35 @@ def analyze(symbol, interval="1h"):
     if pd.isna(atr) or pd.isna(rsi) or pd.isna(adx):
         raise ValueError("Недостаточно индикаторных данных")
 
-    buy_conditions = (
-        price > row["ema20"] > row["ema50"]
-        and 50 < rsi < 68
-        and row["macd"] > row["macd_signal"]
-        and adx >= 20
-        and higher_trend in ("UP", "NOT_USED")
-        and volume_confirm
-        and smc["direction"] == "BULLISH"
-    )
+    buy_checks = {
+        "EMA": price > row["ema20"] > row["ema50"],
+        "RSI": 50 < rsi < 68,
+        "MACD": row["macd"] > row["macd_signal"],
+        "ADX": adx >= 20,
+        "HTF": higher_trend in ("UP", "NOT_USED"),
+        "VOLUME": volume_confirm,
+        "SMC": smc["direction"] == "BULLISH"
+    }
 
-    sell_conditions = (
-        price < row["ema20"] < row["ema50"]
-        and 32 < rsi < 50
-        and row["macd"] < row["macd_signal"]
-        and adx >= 20
-        and higher_trend in ("DOWN", "NOT_USED")
-        and volume_confirm
-        and smc["direction"] == "BEARISH"
+    sell_checks = {
+        "EMA": price < row["ema20"] < row["ema50"],
+        "RSI": 32 < rsi < 50,
+        "MACD": row["macd"] < row["macd_signal"],
+        "ADX": adx >= 20,
+        "HTF": higher_trend in ("DOWN", "NOT_USED"),
+        "VOLUME": volume_confirm,
+        "SMC": smc["direction"] == "BEARISH"
+    }
+
+    buy_conditions = all(buy_checks.values())
+    sell_conditions = all(sell_checks.values())
+
+    print(
+        "BUY checks:",
+        buy_checks,
+        "SELL checks:",
+        sell_checks,
+        flush=True
     )
 
     strength = 0
