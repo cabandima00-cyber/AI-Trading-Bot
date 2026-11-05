@@ -1583,6 +1583,49 @@ def start(message):
         "/signal GBPUSD\n"
         "/markets"
     )
+@bot.message_handler(commands=["backtest"])
+def backtest_stats(message):
+    try:
+        with sqlite3.connect("backtest.db") as conn:
+            stats = conn.execute("""
+                SELECT
+                    COUNT(*),
+                    SUM(CASE WHEN result = 'WIN' THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN result = 'LOSS' THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN result = 'PENDING' THEN 1 ELSE 0 END),
+                    COALESCE(SUM(
+                        CASE
+                            WHEN result IN ('WIN', 'LOSS')
+                            THEN profit_percent
+                            ELSE 0
+                        END
+                    ), 0)
+                FROM backtest_trades
+            """).fetchone()
+
+        total, wins, losses, pending, profit = stats
+
+        wins = wins or 0
+        losses = losses or 0
+        pending = pending or 0
+
+        closed = wins + losses
+        win_rate = (wins / closed * 100) if closed > 0 else 0
+
+        bot.reply_to(
+            message,
+            "📊 BACKTEST STATISTICS\n\n"
+            f"Всего сделок: {total}\n"
+            f"✅ WIN: {wins}\n"
+            f"❌ LOSS: {losses}\n"
+            f"⏳ PENDING: {pending}\n\n"
+            f"🎯 Win Rate: {win_rate:.2f}%\n"
+            f"💰 Общий результат: {profit:+.2f}%"
+        )
+
+    except Exception as error:
+        print("Backtest Stats Error:", repr(error))
+        bot.reply_to(message, "❌ Ошибка получения статистики Backtest.")
 
 
 active_chats = set()
