@@ -1586,22 +1586,22 @@ def start(message):
 @bot.message_handler(commands=["backtest"])
 def backtest_stats(message):
     try:
-        with sqlite3.connect("backtest.db") as conn:
-            stats = conn.execute("""
-                SELECT
-                    COUNT(*),
-                    SUM(CASE WHEN result = 'WIN' THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN result = 'LOSS' THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN result = 'PENDING' THEN 1 ELSE 0 END),
-                    COALESCE(SUM(
-                        CASE
-                            WHEN result IN ('WIN', 'LOSS')
-                            THEN profit_percent
-                            ELSE 0
-                        END
-                    ), 0)
-                FROM backtest_trades
-            """).fetchone()
+response = supabase.table("backtest_trades").select(
+    "result,profit_percent"
+).execute()
+
+trades = response.data or []
+
+total = len(trades)
+wins = sum(1 for trade in trades if trade.get("result") == "WIN")
+losses = sum(1 for trade in trades if trade.get("result") == "LOSS")
+pending = sum(1 for trade in trades if trade.get("result") == "PENDING")
+
+profit = sum(
+    float(trade.get("profit_percent") or 0)
+    for trade in trades
+    if trade.get("result") in ("WIN", "LOSS")
+)
 
         total, wins, losses, pending, profit = stats
 
