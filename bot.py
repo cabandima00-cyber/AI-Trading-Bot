@@ -1584,30 +1584,41 @@ def start(message):
         "/markets"
     )
 @bot.message_handler(commands=["backtest"])
+@bot.message_handler(commands=["backtest"])
 def backtest_stats(message):
     try:
-response = supabase.table("backtest_trades").select(
-    "result,profit_percent"
-).execute()
+        if supabase is None:
+            bot.reply_to(message, "❌ Supabase не подключён.")
+            return
 
-trades = response.data or []
+        response = supabase.table("backtest_trades").select(
+            "result,profit_percent"
+        ).execute()
 
-total = len(trades)
-wins = sum(1 for trade in trades if trade.get("result") == "WIN")
-losses = sum(1 for trade in trades if trade.get("result") == "LOSS")
-pending = sum(1 for trade in trades if trade.get("result") == "PENDING")
+        trades = response.data or []
 
-profit = sum(
-    float(trade.get("profit_percent") or 0)
-    for trade in trades
-    if trade.get("result") in ("WIN", "LOSS")
-)
+        total = len(trades)
 
-        total, wins, losses, pending, profit = stats
+        wins = sum(
+            1 for trade in trades
+            if trade.get("result") == "WIN"
+        )
 
-        wins = wins or 0
-        losses = losses or 0
-        pending = pending or 0
+        losses = sum(
+            1 for trade in trades
+            if trade.get("result") == "LOSS"
+        )
+
+        pending = sum(
+            1 for trade in trades
+            if trade.get("result") == "PENDING"
+        )
+
+        profit = sum(
+            float(trade.get("profit_percent") or 0)
+            for trade in trades
+            if trade.get("result") in ("WIN", "LOSS")
+        )
 
         closed = wins + losses
         win_rate = (wins / closed * 100) if closed > 0 else 0
@@ -1625,7 +1636,10 @@ profit = sum(
 
     except Exception as error:
         print("Backtest Stats Error:", repr(error))
-        bot.reply_to(message, "❌ Ошибка получения статистики Backtest.")
+        bot.reply_to(
+            message,
+            "❌ Ошибка получения статистики Backtest."
+        )
 
 
 active_chats = set()
