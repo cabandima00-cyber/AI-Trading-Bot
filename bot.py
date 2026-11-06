@@ -1583,7 +1583,6 @@ flush=True
             f"🎯 Take Profit: {target:.8g}\n\n"
         )
 
-    result += "⚠️ Аналитический сигнал, не гарантия прибыли."
 
     return result
 
