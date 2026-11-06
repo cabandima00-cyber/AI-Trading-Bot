@@ -1408,6 +1408,11 @@ def analyze(symbol, interval="1h"):
     ], axis=1).max(axis=1)
 
     df["atr"] = tr.rolling(14).mean()
+    if "volume" in df.columns:
+        df["volume_sma"] = df["volume"].rolling(20).mean()
+    else:
+        df["volume"] = 0
+        df["volume_sma"] = 0
 
     
     row = df.iloc[-2]
