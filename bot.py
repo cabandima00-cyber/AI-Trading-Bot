@@ -152,6 +152,36 @@ init_otc_database()
 
 
 
+def sync_open_backtest_trade(
+    symbol,
+    interval,
+    direction,
+    entry_price,
+    stop_loss,
+    take_profit,
+    created_at,
+    candle_time
+):
+    trade = {
+        "symbol": symbol,
+        "interval": interval,
+        "direction": direction,
+        "entry_price": float(entry_price),
+        "stop_loss": float(stop_loss) if stop_loss is not None else None,
+        "take_profit": float(take_profit) if take_profit is not None else None,
+        "result": "PENDING",
+        "profit_percent": 0,
+        "created_at": int(created_at),
+        "candle_time": int(candle_time)
+    }
+
+    try:
+        BACKTEST_SUPABASE_QUEUE.put_nowait(trade)
+        print("Backtest opening queued:", symbol, direction, flush=True)
+        return True
+    except queue.Full:
+        print("Backtest Supabase queue is full", flush=True)
+        return False
 def save_backtest_trade(
     symbol,
     interval,
