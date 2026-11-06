@@ -1477,28 +1477,21 @@ def analyze(symbol, interval="1h"):
 flush=True
 )
 
-    strength = 0
+if buy_conditions:
+    strength = round(
+        sum(buy_checks.values()) / len(buy_checks) * 100
+    )
 
-    if price > row["ema20"] > row["ema50"] or price < row["ema20"] < row["ema50"]:
-        strength += 20
+elif sell_conditions:
+    strength = round(
+        sum(sell_checks.values()) / len(sell_checks) * 100
+    )
 
-    if 50 < rsi < 68 or 32 < rsi < 50:
-        strength += 15
+else:
+    buy_strength = sum(buy_checks.values()) / len(buy_checks) * 100
+    sell_strength = sum(sell_checks.values()) / len(sell_checks) * 100
 
-    if (row["macd"] > row["macd_signal"] and price > row["ema20"]) or \
-       (row["macd"] < row["macd_signal"] and price < row["ema20"]):
-        strength += 20
-
-    if adx >= 20:
-        strength += 15
-
-    if higher_trend in ("UP", "DOWN"):
-        strength += 20
-
-    if volume_confirm:
-        strength += 10
-
-    strength = min(strength, 100)
+    strength = round(max(buy_strength, sell_strength))
 
     if buy_conditions:
         signal = "🟢 BUY"
