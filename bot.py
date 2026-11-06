@@ -1379,6 +1379,7 @@ def analyze(symbol, interval="1h"):
         "RSI": 50 < rsi < 68,
         "MACD": row["macd"] > row["macd_signal"],
         "ADX": adx >= 20,
+        "REGIME": regime["regime"] == "TRENDING UP",
         "HTF": higher_trend in ("UP", "NOT_USED"),
         "VOLUME": volume_confirm,
         "SMC": smc["direction"] == "BULLISH"
@@ -1389,6 +1390,7 @@ def analyze(symbol, interval="1h"):
         "RSI": 32 < rsi < 50,
         "MACD": row["macd"] < row["macd_signal"],
         "ADX": adx >= 20,
+        "REGIME": regime["regime"] == "TRENDING DOWN",
         "HTF": higher_trend in ("DOWN", "NOT_USED"),
         "VOLUME": volume_confirm,
         "SMC": smc["direction"] == "BEARISH"
