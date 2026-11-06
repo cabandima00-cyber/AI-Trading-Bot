@@ -1507,7 +1507,8 @@ flush=True
     # BACKTEST: проверяем закрытие открытых сделок
     update_backtest_trades(
         symbol=f"{market}:{symbol}",
-        current_price=price
+        current_price=price,
+        interval=interval
     )
 
     # BACKTEST: сохраняем только торговые сигналы
