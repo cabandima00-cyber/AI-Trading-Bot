@@ -267,8 +267,9 @@ def update_backtest_trades(symbol, current_price, interval):
                        stop_loss, take_profit, candle_time, created_at
                 FROM backtest_trades
                 WHERE symbol = ?
+                AND interval = ?
                 AND result = 'PENDING'
-            """, (symbol,)).fetchall()
+            """, (symbol, interval)).fetchall()
 
             for trade in trades:
                 (
