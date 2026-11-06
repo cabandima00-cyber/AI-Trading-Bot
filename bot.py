@@ -257,9 +257,17 @@ conn.execute("""
         return False
 
 
-def update_backtest_trades(symbol, current_price, interval):
+def update_backtest_trades(
+    symbol,
+    current_price,
+    candle_high,
+    candle_low,
+    interval
+):
     try:
         current_price = float(current_price)
+        candle_high = float(candle_high)
+        candle_low = float(candle_low)
 
         with sqlite3.connect("backtest.db") as conn:
 
@@ -274,7 +282,7 @@ def update_backtest_trades(symbol, current_price, interval):
 
             for trade in trades:
                 (
-                    trade_id, interval, direction, entry,
+                    trade_id, trade_interval, direction, entry,
                     sl, tp, candle_time, created_at
                 ) = trade
 
@@ -282,25 +290,27 @@ def update_backtest_trades(symbol, current_price, interval):
                 exit_price = None
 
                 if direction == "BUY":
-                    if sl is not None and current_price <= sl:
-                        result = "LOSS"
-                        exit_price = sl
-                    elif tp is not None and current_price >= tp:
-                        result = "WIN"
-                        exit_price = tp
+                    sl_hit = sl is not None and candle_low <= sl
+                    tp_hit = tp is not None and candle_high >= tp
 
                 elif direction == "SELL":
-                    if sl is not None and current_price >= sl:
-                        result = "LOSS"
-                        exit_price = sl
-                    elif tp is not None and current_price <= tp:
-                        result = "WIN"
-                        exit_price = tp
+                    sl_hit = sl is not None and candle_high >= sl
+                    tp_hit = tp is not None and candle_low <= tp
 
-                if result is None:
+                else:
                     continue
 
-                if entry <= 0:
+                # Если за одну свечу задеты SL и TP,
+                # консервативно считаем, что первым сработал SL.
+                if sl_hit:
+                    result = "LOSS"
+                    exit_price = sl
+
+                elif tp_hit:
+                    result = "WIN"
+                    exit_price = tp
+
+                if result is None or entry <= 0:
                     continue
 
                 if direction == "BUY":
@@ -329,7 +339,7 @@ def update_backtest_trades(symbol, current_price, interval):
                 if cursor.rowcount == 1:
                     supabase_trade = {
                         "symbol": symbol,
-                        "interval": interval,
+                        "interval": trade_interval,
                         "direction": direction,
                         "entry_price": float(entry),
                         "exit_price": float(exit_price),
@@ -358,7 +368,6 @@ def update_backtest_trades(symbol, current_price, interval):
     except Exception as e:
         print("Backtest Update Error:", repr(e))
         return False
-
 
 
 def get_otc_database_count():
