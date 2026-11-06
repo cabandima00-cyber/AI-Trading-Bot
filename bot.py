@@ -935,15 +935,17 @@ if (
     current_high = float(highs.iloc[-1])
     current_low = float(lows.iloc[-1])
 
-    bullish_break = (
-        previous_close <= latest_high
-        and current_close > latest_high
-    )
+bullish_break = (
+    previous_close <= latest_high
+    and current_close > latest_high
+    and current_close > previous_close
+)
 
-    bearish_break = (
-        previous_close >= latest_low
-        and current_close < latest_low
-    )
+bearish_break = (
+    previous_close >= latest_low
+    and current_close < latest_low
+    and current_close < previous_close
+)
 
     if bullish_break:
         result["bos"] = "BULLISH"
