@@ -866,6 +866,19 @@ def analyze_smc(df, swing=3):
         if lows.iloc[i] == low_window.min():
             low_pivots.append((i, float(lows.iloc[i])))
 
+    print(
+        "SMC PIVOTS:",
+        {
+            "HIGH_COUNT": len(high_pivots),
+            "LOW_COUNT": len(low_pivots),
+            "LAST_HIGHS": [p[1] for p in high_pivots[-3:]],
+            "LAST_LOWS": [p[1] for p in low_pivots[-3:]],
+            "LAST_CLOSES": [
+                float(x) for x in closes.iloc[-3:]
+            ]
+        },
+        flush=True
+    )
     if len(high_pivots) < 2 or len(low_pivots) < 2:
         return result
 
