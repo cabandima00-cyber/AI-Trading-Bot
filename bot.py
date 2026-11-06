@@ -1477,21 +1477,16 @@ def analyze(symbol, interval="1h"):
 flush=True
 )
 
-if buy_conditions:
-    strength = round(
-        sum(buy_checks.values()) / len(buy_checks) * 100
-    )
+    if buy_conditions:
+        strength = round(sum(buy_checks.values()) / len(buy_checks) * 100)
 
-elif sell_conditions:
-    strength = round(
-        sum(sell_checks.values()) / len(sell_checks) * 100
-    )
+    elif sell_conditions:
+        strength = round(sum(sell_checks.values()) / len(sell_checks) * 100)
 
-else:
-    buy_strength = sum(buy_checks.values()) / len(buy_checks) * 100
-    sell_strength = sum(sell_checks.values()) / len(sell_checks) * 100
-
-    strength = round(max(buy_strength, sell_strength))
+    else:
+        buy_strength = sum(buy_checks.values()) / len(buy_checks) * 100
+        sell_strength = sum(sell_checks.values()) / len(sell_checks) * 100
+        strength = round(max(buy_strength, sell_strength))
 
     if buy_conditions:
         signal = "🟢 BUY"
