@@ -1523,13 +1523,14 @@ flush=True
         target = None
 
     # BACKTEST: проверяем закрытие открытых сделок
-    update_backtest_trades(
-        symbol=f"{market}:{symbol}",
-        current_price=price,
-        candle_high=candle_high,
-        candle_low=candle_low,
-        interval=interval
-    )
+update_backtest_trades(
+    symbol=f"{market}:{symbol}",
+    current_price=price,
+    candle_high=candle_high,
+    candle_low=candle_low,
+    interval=interval,
+    candle_time=candle_time
+)
 
     # BACKTEST: сохраняем только торговые сигналы
     if signal == "🟢 BUY" and candle_time is not None:
