@@ -902,11 +902,26 @@ def analyze_smc(df, swing=3):
     result["high_level"] = latest_high
     result["low_level"] = latest_low
 
-    if latest_high > previous_high and latest_low > previous_low:
+    high_trend = (
+        "HH" if latest_high > previous_high
+        else "LH" if latest_high < previous_high
+        else "EQ"
+    )
+
+    low_trend = (
+        "HL" if latest_low > previous_low
+        else "LL" if latest_low < previous_low
+        else "EQ"
+    )
+
+    if high_trend == "HH" and low_trend == "HL":
         result["structure"] = "BULLISH"
 
-    elif latest_high < previous_high and latest_low < previous_low:
+    elif high_trend == "LH" and low_trend == "LL":
         result["structure"] = "BEARISH"
+
+    else:
+        result["structure"] = "NEUTRAL"
 
     previous_close = float(closes.iloc[-2])
     current_close = float(closes.iloc[-1])
