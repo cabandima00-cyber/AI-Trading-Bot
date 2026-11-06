@@ -1520,6 +1520,8 @@ flush=True
     update_backtest_trades(
         symbol=f"{market}:{symbol}",
         current_price=price,
+        candle_high=candle_high,
+        candle_low=candle_low,
         interval=interval
     )
 
