@@ -528,7 +528,7 @@ def backtest_supabase_worker():
                 try:
                     supabase.table("backtest_trades").upsert(
                         trade,
-on_conflict="symbol,interval,candle_time"
+on_conflict="symbol,interval,direction,candle_time"
                     ).execute()
 
                     print("Supabase: backtest trade saved")
