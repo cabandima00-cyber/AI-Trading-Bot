@@ -23,6 +23,37 @@ print(
 )
 print("Supabase URL configured:", bool(SUPABASE_URL), flush=True)
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
+
+def init_backtest_db():
+    try:
+        with sqlite3.connect("backtest.db") as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS backtest_trades (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    symbol TEXT NOT NULL,
+                    interval TEXT NOT NULL,
+                    direction TEXT NOT NULL,
+                    entry_price REAL NOT NULL,
+                    exit_price REAL,
+                    stop_loss REAL,
+                    take_profit REAL,
+                    result TEXT DEFAULT 'PENDING',
+                    profit_percent REAL DEFAULT 0,
+                    created_at INTEGER NOT NULL,
+                    closed_at INTEGER,
+                    candle_time INTEGER
+                )
+            """)
+            conn.commit()
+
+        print("Backtesting database initialized", flush=True)
+
+    except Exception as e:
+        print("Backtesting DB Error:", repr(e), flush=True)
+
+
+init_backtest_db()
+
 def get_candle_timestamp(row):
     try:
         # Binance и BinoDex OTC
