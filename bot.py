@@ -1401,12 +1401,11 @@ def analyze(symbol, interval="1h"):
     df["atr"] = tr.rolling(14).mean()
 
     
-    if "volume" in df.columns:
-        df["volume_sma"] = df["volume"].rolling(20).mean()
-    else:
-        df["volume"] = 0
-        df["volume_sma"] = 0
     row = df.iloc[-2]
+    candle_time = int(df.index[-2].timestamp())
+
+    print("INDEX TYPE:", type(df.index))
+    print("INDEX VALUE:", df.index[-2])
 
     smc = analyze_smc(df)
     liquidity = analyze_liquidity(df)
