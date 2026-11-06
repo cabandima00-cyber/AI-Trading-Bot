@@ -152,6 +152,86 @@ init_otc_database()
 
 
 
+def save_backtest_trade(
+    symbol,
+    interval,
+    direction,
+    entry_price,
+    candle_time,
+    stop_loss=None,
+    take_profit=None
+):
+    try:
+        if direction not in ("BUY", "SELL"):
+            print("Backtest skipped: invalid direction", direction)
+            return False
+
+        entry_price = float(entry_price)
+        candle_time = int(candle_time)
+
+        if entry_price <= 0:
+            return False
+
+        created_at = int(time.time())
+
+        with sqlite3.connect("backtest.db") as conn:
+
+            existing = conn.execute("""
+                SELECT id
+                FROM backtest_trades
+                WHERE symbol = ?
+                AND interval = ?
+                AND direction = ?
+                AND candle_time = ?
+            """, (
+                symbol,
+                interval,
+                direction,
+                candle_time
+            )).fetchone()
+
+            if existing:
+                print("Backtest duplicate skipped:", symbol, interval)
+                return False
+
+            conn.execute("""
+                INSERT INTO backtest_trades (
+                    symbol,
+                    interval,
+                    direction,
+                    entry_price,
+                    stop_loss,
+                    take_profit,
+                    result,
+                    profit_percent,
+                    created_at,
+                    candle_time
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)
+            """, (
+                symbol,
+                interval,
+                direction,
+                entry_price,
+                stop_loss,
+                take_profit,
+                created_at,
+                candle_time
+            ))
+
+            conn.commit()
+
+        print(
+            f"Backtest saved: {symbol} {direction} "
+            f"entry={entry_price}",
+            flush=True
+        )
+
+        return True
+
+    except Exception as e:
+        print("Backtest Save Error:", repr(e), flush=True)
+        return False
 def update_backtest_trades(
     symbol,
     current_price,
