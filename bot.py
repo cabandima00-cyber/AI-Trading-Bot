@@ -271,14 +271,15 @@ def update_backtest_trades(
 
         with sqlite3.connect("backtest.db") as conn:
 
-            trades = conn.execute("""
-                SELECT id, interval, direction, entry_price,
-                       stop_loss, take_profit, candle_time, created_at
-                FROM backtest_trades
-                WHERE symbol = ?
-                AND interval = ?
-                AND result = 'PENDING'
-            """, (symbol, interval)).fetchall()
+trades = conn.execute("""
+    SELECT id, interval, direction, entry_price,
+           stop_loss, take_profit, candle_time, created_at
+    FROM backtest_trades
+    WHERE symbol = ?
+    AND interval = ?
+    AND result = 'PENDING'
+    AND candle_time < ?
+""", (symbol, interval, int(candle_time))).fetchall()
 
             for trade in trades:
                 (
