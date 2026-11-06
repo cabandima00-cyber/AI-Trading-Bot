@@ -1457,17 +1457,6 @@ sell_checks = {
     "SMC": smc["direction"] == "BEARISH"
 }
 
-    sell_checks = {
-        "EMA": price < row["ema20"] < row["ema50"],
-        "RSI": 32 < rsi < 50,
-        "MACD": row["macd"] < row["macd_signal"],
-        "ADX": adx >= 20,
-        "REGIME": regime["regime"] == "TRENDING DOWN",
-        "HTF": higher_trend in ("DOWN", "NOT_USED"),
-        "VOLUME": volume_confirm,
-        "SMC": smc["direction"] == "BEARISH"
-    }
-
     buy_conditions = all(buy_checks.values())
     sell_conditions = all(sell_checks.values())
 
