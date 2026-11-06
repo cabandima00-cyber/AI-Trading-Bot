@@ -720,7 +720,10 @@ def get_forex_data(symbol, interval="1h"):
     for col in ["open", "high", "low", "close"]:
         df[col] = pd.to_numeric(df[col])
 
-    df = df.iloc[::-1].reset_index(drop=True)
+    df = df.iloc[::-1].copy()
+
+    df["datetime"] = pd.to_datetime(df["datetime"])
+    df.set_index("datetime", inplace=True)
 
     return df
 
