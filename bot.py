@@ -120,144 +120,21 @@ init_otc_database()
 
 
 
-def init_backtest_db():
-    try:
-        with sqlite3.connect("backtest.db") as conn:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS backtest_trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    symbol TEXT NOT NULL,
-                    interval TEXT NOT NULL,
-                    direction TEXT NOT NULL,
-                    entry_price REAL NOT NULL,
-                    exit_price REAL,
-                    stop_loss REAL,
-                    take_profit REAL,
-                    result TEXT DEFAULT 'PENDING',
-                    profit_percent REAL DEFAULT 0,
-                    created_at INTEGER NOT NULL,
-                    closed_at INTEGER,
-                    candle_time INTEGER
-                )
-            """)
 
-            # Проверяем существующие столбцы
-            columns = [
-                row[1]
-                for row in conn.execute(
-                    "PRAGMA table_info(backtest_trades)"
-                ).fetchall()
-            ]
-
-            # Добавляем candle_time в старую таблицу
-            if "candle_time" not in columns:
-                conn.execute("""
-                    ALTER TABLE backtest_trades
-                    ADD COLUMN candle_time INTEGER
-                """)
-
-            conn.commit()
-
-        print("Backtesting database initialized")
-
-    except Exception as e:
-        print("Backtesting DB Error:", e)
-
-
-init_backtest_db()
-
-
-def save_backtest_trade(
+def update_backtest_trades(
     symbol,
+    current_price,
+    candle_high,
+    candle_low,
     interval,
-    direction,
-    entry_price,
-    candle_time,
-    stop_loss=None,
-    take_profit=None
+    candle_time
 ):
-    if direction not in ("BUY", "SELL"):
-        print("Backtest skipped: invalid direction", direction)
-        return False
     try:
-        import time
-        created_at = int(time.time())
+        current_price = float(current_price)
+        candle_high = float(candle_high)
+        candle_low = float(candle_low)
 
         with sqlite3.connect("backtest.db") as conn:
-
-            existing = conn.execute("""
-                SELECT id
-                FROM backtest_trades
-                WHERE symbol = ?
-                AND interval = ?
-                AND candle_time = ?
-                LIMIT 1
-            """, (
-                symbol,
-                interval,
-                int(candle_time)
-            )).fetchone()
-
-            if existing:
-                print(
-                    f"Duplicate candle skipped: "
-                    f"{symbol} {interval} {candle_time}"
-                )
-                return False
-
-            conn.execute("""
-                INSERT INTO backtest_trades (
-                    symbol,
-                    interval,
-                    direction,
-                    entry_price,
-                    stop_loss,
-                    take_profit,
-                    result,
-                    profit_percent,
-                    created_at,
-                    candle_time
-                )
-                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)
-            """, (
-                symbol,
-                interval,
-                direction,
-                float(entry_price),
-                float(stop_loss) if stop_loss is not None else None,
-                float(take_profit) if take_profit is not None else None,
-                created_at,
-                int(candle_time)
-            ))
-
-        saved_trade = {
-            "symbol": symbol,
-            "interval": interval,
-            "direction": direction,
-            "entry_price": float(entry_price),
-            "stop_loss": float(stop_loss) if stop_loss is not None else None,
-            "take_profit": float(take_profit) if take_profit is not None else None,
-            "result": "PENDING",
-            "profit_percent": 0,
-            "created_at": created_at,
-            "candle_time": int(candle_time)
-        }
-
-        try:
-            BACKTEST_SUPABASE_QUEUE.put_nowait(saved_trade)
-            print("Backtest queued for Supabase:", symbol)
-        except queue.Full:
-            print("Backtest Supabase queue is full")
-
-        return True
-
-    except Exception as e:
-        print("Backtest Save Error:", e)
-        return False
-
-
-        with sqlite3.connect("backtest.db") as conn:
-
             trades = conn.execute("""
                 SELECT id, interval, direction, entry_price,
                        stop_loss, take_profit, candle_time, created_at
@@ -275,7 +152,7 @@ def save_backtest_trade(
             for trade in trades:
                 (
                     trade_id, trade_interval, direction, entry,
-                    sl, tp, candle_time, created_at
+                    sl, tp, trade_candle_time, created_at
                 ) = trade
 
                 result = None
@@ -292,12 +169,10 @@ def save_backtest_trade(
                 else:
                     continue
 
-                # Если за одну свечу задеты SL и TP,
-                # консервативно считаем, что первым сработал SL.
+                # Если задеты SL и TP, считаем первым SL.
                 if sl_hit:
                     result = "LOSS"
                     exit_price = sl
-
                 elif tp_hit:
                     result = "WIN"
                     exit_price = tp
@@ -341,7 +216,7 @@ def save_backtest_trade(
                         "profit_percent": float(profit),
                         "created_at": int(created_at),
                         "closed_at": closed_at,
-                        "candle_time": int(candle_time)
+                        "candle_time": int(trade_candle_time)
                     }
 
                     try:
@@ -360,6 +235,7 @@ def save_backtest_trade(
     except Exception as e:
         print("Backtest Update Error:", repr(e))
         return False
+
 
 
 def get_otc_database_count():
