@@ -205,31 +205,30 @@ def save_backtest_trade(
                 )
                 return False
 
-conn.execute("""
-    INSERT INTO backtest_trades (
-        symbol,
-        interval,
-        direction,
-        entry_price,
-        stop_loss,
-        take_profit,
-        result,
-        profit_percent,
-        created_at,
-        candle_time
-    )
-    VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)
-""", (
-    symbol,
-    interval,
-    direction,
-    float(entry_price),
-    float(stop_loss) if stop_loss is not None else None,
-    float(take_profit) if take_profit is not None else None,
-    created_at,
-    int(candle_time)
-))
-
+            conn.execute("""
+                INSERT INTO backtest_trades (
+                    symbol,
+                    interval,
+                    direction,
+                    entry_price,
+                    stop_loss,
+                    take_profit,
+                    result,
+                    profit_percent,
+                    created_at,
+                    candle_time
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)
+            """, (
+                symbol,
+                interval,
+                direction,
+                float(entry_price),
+                float(stop_loss) if stop_loss is not None else None,
+                float(take_profit) if take_profit is not None else None,
+                created_at,
+                int(candle_time)
+            ))
 
         saved_trade = {
             "symbol": symbol,
