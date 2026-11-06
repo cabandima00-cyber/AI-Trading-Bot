@@ -831,6 +831,9 @@ def get_crypto_data(symbol, interval="1h"):
     for col in ["open", "high", "low", "close", "volume"]:
         df[col] = pd.to_numeric(df[col])
 
+    df["time"] = pd.to_datetime(df["time"], unit="ms")
+    df.set_index("time", inplace=True)
+
     return df
 
 
