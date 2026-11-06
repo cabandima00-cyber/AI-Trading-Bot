@@ -860,11 +860,17 @@ def analyze_smc(df, swing=3):
         high_window = highs.iloc[i-swing:i+swing+1]
         low_window = lows.iloc[i-swing:i+swing+1]
 
-        if highs.iloc[i] == high_window.max():
-            high_pivots.append((i, float(highs.iloc[i])))
+if (
+    highs.iloc[i] == high_window.max()
+    and high_window.argmax() == swing
+):
+    high_pivots.append((i, float(highs.iloc[i])))
 
-        if lows.iloc[i] == low_window.min():
-            low_pivots.append((i, float(lows.iloc[i])))
+if (
+    lows.iloc[i] == low_window.min()
+    and low_window.argmin() == swing
+):
+    low_pivots.append((i, float(lows.iloc[i])))
 
     print(
         "SMC PIVOTS:",
