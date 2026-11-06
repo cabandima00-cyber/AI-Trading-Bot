@@ -1439,7 +1439,6 @@ print(
 
     strength = min(strength, 100)
 
-
     if buy_conditions:
         signal = "🟢 BUY"
         stop = price - atr * 1.5
@@ -1454,7 +1453,6 @@ print(
         signal = "🟡 HOLD"
         stop = None
         target = None
-
 
 
     # BACKTEST: проверяем закрытие открытых сделок
