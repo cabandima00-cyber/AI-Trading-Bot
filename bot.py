@@ -261,7 +261,8 @@ def update_backtest_trades(
     current_price,
     candle_high,
     candle_low,
-    interval
+    interval,
+    candle_time
 ):
     try:
         current_price = float(current_price)
