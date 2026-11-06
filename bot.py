@@ -256,7 +256,7 @@ def save_backtest_trade(
         return False
 
 
-def update_backtest_trades(symbol, current_price):
+def update_backtest_trades(symbol, current_price, interval):
     try:
         current_price = float(current_price)
 
