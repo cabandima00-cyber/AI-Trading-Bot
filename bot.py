@@ -240,7 +240,7 @@ conn.execute("""
             "take_profit": float(take_profit) if take_profit is not None else None,
             "result": "PENDING",
             "profit_percent": 0,
-            "created_at": int(time.time()),
+            "created_at": created_at,
             "candle_time": int(candle_time)
         }
 
