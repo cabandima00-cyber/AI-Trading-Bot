@@ -1408,19 +1408,22 @@ def analyze(symbol, interval="1h"):
     )
 
     print(
-        "SIGNAL VALUES:",
-        {
-            "RSI": float(rsi),
-            "VOLUME": bool(volume_confirm),
-            "HTF": higher_trend,
-            "SMC": smc["direction"],
-            "PRICE": float(price),
-            "EMA20": float(row["ema20"]),
-            "EMA50": float(row["ema50"]),
-            "ADX": float(adx)
-        },
-        flush=True
-    )
+"SIGNAL VALUES:",
+{
+    "RSI": float(rsi),
+    "VOLUME": bool(volume_confirm),
+    "HTF": higher_trend,
+    "REGIME": regime["regime"],
+    "TREND": regime["trend"],
+    "VOLATILITY": regime["volatility"],
+    "SMC": smc["direction"],
+    "PRICE": float(price),
+    "EMA20": float(row["ema20"]),
+    "EMA50": float(row["ema50"]),
+    "ADX": float(adx)
+},
+flush=True
+)
 
     strength = 0
 
