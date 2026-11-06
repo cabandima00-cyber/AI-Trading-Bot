@@ -250,7 +250,16 @@ def save_backtest_trade(
             ))
 
             conn.commit()
-
+        sync_open_backtest_trade(
+            symbol=symbol,
+            interval=interval,
+            direction=direction,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            created_at=created_at,
+            candle_time=candle_time
+        )
         print(
             f"Backtest saved: {symbol} {direction} "
             f"entry={entry_price}",
