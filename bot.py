@@ -959,15 +959,17 @@ bearish_break = (
     elif result["structure"] == "BULLISH" and bearish_break:
         result["choch"] = "BEARISH"
 
-    bullish_sweep = (
-        current_low < latest_low
-        and current_close > latest_low
-    )
+bullish_sweep = (
+    current_low < latest_low
+    and current_close > latest_low
+    and current_close > float(data["open"].iloc[-1])
+)
 
-    bearish_sweep = (
-        current_high > latest_high
-        and current_close < latest_high
-    )
+bearish_sweep = (
+    current_high > latest_high
+    and current_close < latest_high
+    and current_close < float(data["open"].iloc[-1])
+)
 
     if bullish_sweep:
         result["sweep"] = "BULLISH"
