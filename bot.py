@@ -181,6 +181,7 @@ def save_backtest_trade(
         return False
     try:
         import time
+        created_at = int(time.time())
 
         with sqlite3.connect("backtest.db") as conn:
 
