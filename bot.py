@@ -882,22 +882,22 @@ def analyze_smc(df, swing=3):
     if len(high_pivots) < 2 or len(low_pivots) < 2:
         return result
 
-previous_high = high_pivots[-2][1]
-latest_high = high_pivots[-1][1]
+    previous_high = high_pivots[-2][1]
+    latest_high = high_pivots[-1][1]
 
-previous_low = low_pivots[-2][1]
-latest_low = low_pivots[-1][1]
+    previous_low = low_pivots[-2][1]
+    latest_low = low_pivots[-1][1]
 
-print(
-    "SMC STRUCTURE CHECK:",
-    {
-        "PREVIOUS_HIGH": high_pivots[-2],
-        "LATEST_HIGH": high_pivots[-1],
-        "PREVIOUS_LOW": low_pivots[-2],
-        "LATEST_LOW": low_pivots[-1]
-    },
-    flush=True
-)
+    print(
+        "SMC STRUCTURE CHECK:",
+        {
+            "PREVIOUS_HIGH": high_pivots[-2],
+            "LATEST_HIGH": high_pivots[-1],
+            "PREVIOUS_LOW": low_pivots[-2],
+            "LATEST_LOW": low_pivots[-1]
+        },
+        flush=True
+    )
 
     result["high_level"] = latest_high
     result["low_level"] = latest_low
