@@ -860,17 +860,17 @@ def analyze_smc(df, swing=3):
         high_window = highs.iloc[i-swing:i+swing+1]
         low_window = lows.iloc[i-swing:i+swing+1]
 
-if (
-    highs.iloc[i] == high_window.max()
-    and high_window.argmax() == swing
-):
-    high_pivots.append((i, float(highs.iloc[i])))
+        if (
+            highs.iloc[i] == high_window.max()
+            and high_window.argmax() == swing
+        ):
+            high_pivots.append((i, float(highs.iloc[i])))
 
-if (
-    lows.iloc[i] == low_window.min()
-    and low_window.argmin() == swing
-):
-    low_pivots.append((i, float(lows.iloc[i])))
+        if (
+            lows.iloc[i] == low_window.min()
+            and low_window.argmin() == swing
+        ):
+            low_pivots.append((i, float(lows.iloc[i])))
 
     print(
         "SMC PIVOTS:",
@@ -885,6 +885,7 @@ if (
         },
         flush=True
     )
+
     if len(high_pivots) < 2 or len(low_pivots) < 2:
         return result
 
@@ -893,17 +894,6 @@ if (
 
     previous_low = low_pivots[-2][1]
     latest_low = low_pivots[-1][1]
-
-    print(
-        "SMC STRUCTURE CHECK:",
-        {
-            "PREVIOUS_HIGH": high_pivots[-2],
-            "LATEST_HIGH": high_pivots[-1],
-            "PREVIOUS_LOW": low_pivots[-2],
-            "LATEST_LOW": low_pivots[-1]
-        },
-        flush=True
-    )
 
     result["high_level"] = latest_high
     result["low_level"] = latest_low
@@ -926,9 +916,6 @@ if (
     elif high_trend == "LH" and low_trend == "LL":
         result["structure"] = "BEARISH"
 
-    else:
-        result["structure"] = "NEUTRAL"
-
     previous_close = float(closes.iloc[-2])
     current_close = float(closes.iloc[-1])
 
@@ -946,6 +933,7 @@ if (
         and current_close < latest_low
         and current_close < previous_close
     )
+
     if bullish_break:
         result["bos"] = "BULLISH"
 
