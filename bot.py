@@ -959,23 +959,24 @@ bearish_break = (
     elif result["structure"] == "BULLISH" and bearish_break:
         result["choch"] = "BEARISH"
 
-bullish_sweep = (
-    current_low < latest_low
-    and current_close > latest_low
-    and current_close > float(data["open"].iloc[-1])
-)
+    bullish_sweep = (
+        current_low < latest_low
+        and current_close > latest_low
+        and current_close > float(data["open"].iloc[-1])
+    )
 
-bearish_sweep = (
-    current_high > latest_high
-    and current_close < latest_high
-    and current_close < float(data["open"].iloc[-1])
-)
+    bearish_sweep = (
+        current_high > latest_high
+        and current_close < latest_high
+        and current_close < float(data["open"].iloc[-1])
+    )
 
     if bullish_sweep:
         result["sweep"] = "BULLISH"
 
     elif bearish_sweep:
         result["sweep"] = "BEARISH"
+
     print(
         "SMC SWEEP CHECK:",
         {
@@ -1002,7 +1003,6 @@ bearish_sweep = (
         result["direction"] = result["structure"]
 
     return result
-
 
 def analyze_liquidity(df, lookback=30, tolerance=0.001):
     """
