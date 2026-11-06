@@ -940,6 +940,18 @@ def analyze_smc(df, swing=3):
 
     elif bearish_sweep:
         result["sweep"] = "BEARISH"
+    print(
+        "SMC SWEEP CHECK:",
+        {
+            "CURRENT_HIGH": current_high,
+            "CURRENT_LOW": current_low,
+            "LATEST_HIGH": latest_high,
+            "LATEST_LOW": latest_low,
+            "BULLISH_SWEEP": bullish_sweep,
+            "BEARISH_SWEEP": bearish_sweep
+        },
+        flush=True
+    )
 
     if result["choch"] != "NONE":
         result["direction"] = result["choch"]
