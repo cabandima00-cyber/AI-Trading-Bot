@@ -1160,34 +1160,23 @@ def analyze_market_regime(df):
         )
 
         result["adx"] = round(adx, 2)
+        result["adx"] = round(adx, 2)
         result["atr_percent"] = round(atr_percent, 4)
 
         if adx >= 20 and ema20 > ema50:
             result["trend"] = "BULLISH"
-
         elif adx >= 20 and ema20 < ema50:
             result["trend"] = "BEARISH"
-
         else:
             result["trend"] = "NEUTRAL"
 
         if atr_median > 0 and atr_percent > atr_median * 1.5:
             result["volatility"] = "HIGH"
             result["regime"] = "HIGH VOLATILITY"
-
         elif result["trend"] == "BULLISH":
             result["regime"] = "TRENDING UP"
-
         elif result["trend"] == "BEARISH":
             result["regime"] = "TRENDING DOWN"
-
-        else:
-            result["regime"] = "RANGING"
-
-        elif adx >= 20 and ema20 < ema50:
-            result["trend"] = "BEARISH"
-            result["regime"] = "TRENDING DOWN"
-
         else:
             result["regime"] = "RANGING"
 
