@@ -1416,11 +1416,13 @@ def analyze(symbol, interval="1h"):
             and current_volume > average_volume
         )
 
-    price = row["close"]
-    rsi = row["rsi"]
-    atr = row["atr"]
-    adx = row["adx"]
+price = float(row["close"])
+candle_high = float(row["high"])
+candle_low = float(row["low"])
 
+rsi = row["rsi"]
+atr = row["atr"]
+adx = row["adx"]
     if pd.isna(atr) or pd.isna(rsi) or pd.isna(adx):
         raise ValueError("Недостаточно индикаторных данных")
 
