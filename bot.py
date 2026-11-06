@@ -256,30 +256,21 @@ def save_backtest_trade(
         return False
 
 
-def update_backtest_trades(
-    symbol,
-    current_price,
-    candle_high,
-    candle_low,
-    interval,
-    candle_time
-):
-    try:
-        current_price = float(current_price)
-        candle_high = float(candle_high)
-        candle_low = float(candle_low)
-
         with sqlite3.connect("backtest.db") as conn:
 
-trades = conn.execute("""
-    SELECT id, interval, direction, entry_price,
-           stop_loss, take_profit, candle_time, created_at
-    FROM backtest_trades
-    WHERE symbol = ?
-    AND interval = ?
-    AND result = 'PENDING'
-    AND candle_time < ?
-""", (symbol, interval, int(candle_time))).fetchall()
+            trades = conn.execute("""
+                SELECT id, interval, direction, entry_price,
+                       stop_loss, take_profit, candle_time, created_at
+                FROM backtest_trades
+                WHERE symbol = ?
+                AND interval = ?
+                AND result = 'PENDING'
+                AND candle_time < ?
+            """, (
+                symbol,
+                interval,
+                int(candle_time)
+            )).fetchall()
 
             for trade in trades:
                 (
