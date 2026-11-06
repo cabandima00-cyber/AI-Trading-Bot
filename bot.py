@@ -666,6 +666,9 @@ def build_otc_candles(symbol, interval="1min"):
 
     candles.rename(columns={"candle_time": "time"}, inplace=True)
 
+    candles["time"] = pd.to_datetime(candles["time"], utc=True)
+    candles.set_index("time", inplace=True)
+
     return candles
 
 OTC_TICKS = defaultdict(lambda: deque(maxlen=50000))
