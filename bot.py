@@ -2114,3 +2114,14 @@ def otc_timeframe_callback(call):
         )
 
 bot.infinity_polling(skip_pending=True)
+# TEMP BACKTEST TEST
+if __name__ == "__main__":
+    save_backtest_trade(
+        symbol="TEST:BACKTEST",
+        interval="1h",
+        direction="BUY",
+        entry_price=100,
+        candle_time=int(time.time()),
+        stop_loss=95,
+        take_profit=110
+    )
