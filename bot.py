@@ -1559,8 +1559,18 @@ flush=True
         candle_time=candle_time
     )
 
-    # BACKTEST: сохраняем только торговые сигналы
+
+    # BACKTEST: диагностика сигналов
+    print(
+        "BACKTEST CHECK:",
+        "signal=", signal,
+        "candle_time=", candle_time,
+        "price=", price,
+        flush=True
+    )
+
     if signal == "🟢 BUY" and candle_time is not None:
+        print("BACKTEST: BUY detected", flush=True)
         save_backtest_trade(
             symbol=f"{market}:{symbol}",
             interval=interval,
@@ -1572,6 +1582,7 @@ flush=True
         )
 
     elif signal == "🔴 SELL" and candle_time is not None:
+        print("BACKTEST: SELL detected", flush=True)
         save_backtest_trade(
             symbol=f"{market}:{symbol}",
             interval=interval,
@@ -1581,6 +1592,7 @@ flush=True
             stop_loss=stop,
             take_profit=target
         )
+
 
     if higher_trend == "UP":
         trend_text = "🟢 Восходящий"
