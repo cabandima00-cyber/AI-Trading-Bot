@@ -2114,4 +2114,13 @@ def otc_timeframe_callback(call):
         )
 
 
+# TEMP BACKTEST CLOSE TEST
+update_backtest_trades(
+    symbol="TEST:BACKTEST",
+    current_price=110,
+    candle_high=111,
+    candle_low=105,
+    interval="1h",
+    candle_time=int(time.time()) + 3600
+)
 bot.infinity_polling(skip_pending=True)
