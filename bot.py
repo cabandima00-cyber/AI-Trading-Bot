@@ -370,15 +370,22 @@ def update_backtest_trades(
                     }
 
                     try:
-                        BACKTEST_SUPABASE_QUEUE.put_nowait(
-                            supabase_trade
+                        BACKTEST_SUPABASE_QUEUE.put(
+                            supabase_trade,
+                            timeout=10
                         )
                         print(
                             f"Backtest closed: {symbol} "
-                            f"{direction} {result}"
+                            f"{direction} {result}",
+                            flush=True
                         )
                     except queue.Full:
-                        print("Backtest Supabase queue is full")
+                        print(
+                            "Backtest Supabase queue is full:",
+                            symbol,
+                            direction,
+                            flush=True
+                        )
 
         return True
 
