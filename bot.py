@@ -2113,4 +2113,14 @@ def otc_timeframe_callback(call):
             f"❌ Ошибка: {type(error).__name__}"
         )
 
+# TEMP BACKTEST TEST
+save_backtest_trade(
+    symbol="TEST:BACKTEST",
+    interval="1h",
+    direction="BUY",
+    entry_price=100,
+    candle_time=int(time.time()),
+    stop_loss=95,
+    take_profit=110
+)
 bot.infinity_polling(skip_pending=True)
