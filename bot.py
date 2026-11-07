@@ -554,6 +554,7 @@ def supabase_worker():
             print("Supabase worker error:", repr(error))
             time.sleep(5)
 
+
 def backtest_supabase_worker():
     while True:
         if supabase is None:
@@ -565,7 +566,7 @@ def backtest_supabase_worker():
 
             while True:
                 try:
-                     supabase.table("backtest_trades").upsert(
+                    supabase.table("backtest_trades").upsert(
                         trade,
                         on_conflict="symbol,interval,direction,candle_time"
                     ).execute()
